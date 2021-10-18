@@ -404,16 +404,16 @@ export async function main(argv: string[]): Promise<any> {
 				}
 			}
 
-			for (const e in env) {
-				// Ignore the _ env var, because the open command
-				// ignores it anyway.
-				// Pass the rest of the env vars in to fix
-				// https://github.com/microsoft/vscode/issues/134696.
-				if (e !== '_') {
-					spawnArgs.push('--env');
-					spawnArgs.push(`${e}=${env[e]}`);
-				}
-			}
+			// for (const e in env) {
+			// 	// Ignore the _ env var, because the open command
+			// 	// ignores it anyway.
+			// 	// Pass the rest of the env vars in to fix
+			// 	// https://github.com/microsoft/vscode/issues/134696.
+			// 	if (e !== '_') {
+			// 		spawnArgs.push('--env');
+			// 		spawnArgs.push(`${e}=${env[e]}`);
+			// 	}
+			// }
 
 			spawnArgs.push('--args', ...argv.slice(2)); // pass on our arguments
 
@@ -431,7 +431,8 @@ export async function main(argv: string[]): Promise<any> {
 			// We already passed over the env variables
 			// using the --env flags, so we can leave them out here.
 			// Also, we don't need to pass env._, which is different from argv._
-			child = spawn('open', spawnArgs, { ...options, env: {} });
+			// child = spawn('open', spawnArgs, { ...options, env: {} });
+			child = spawn(process.execPath, argv.slice(2), options);
 		}
 
 		return Promise.all(processCallbacks.map(callback => callback(child)));
