@@ -52,7 +52,7 @@ import { DiskFileSystemProvider } from 'vs/platform/files/node/diskFileSystemPro
 import { IFileService } from 'vs/platform/files/common/files';
 import { IProductService } from 'vs/platform/product/common/productService';
 import { RemoteAgentConnectionContext } from 'vs/platform/remote/common/remoteAgentEnvironment';
-import { IPCServer, ClientConnectionEvent, IMessagePassingProtocol, StaticRouter } from 'vs/base/parts/ipc/common/ipc';
+import { IPCServer, ClientConnectionEvent, IMessagePassingProtocol, StaticRouter, ProxyChannel } from 'vs/base/parts/ipc/common/ipc';
 import { Emitter, Event } from 'vs/base/common/event';
 import { RemoteAgentEnvironmentChannel } from 'vs/server/remoteAgentEnvironmentImpl';
 import { RemoteAgentFileSystemProviderChannel } from 'vs/server/remoteFileSystemProviderServer';
@@ -79,6 +79,8 @@ import { PtyHostService } from 'vs/platform/terminal/node/ptyHostService';
 import { IRemoteTelemetryService, RemoteNullTelemetryService, RemoteTelemetryService } from 'vs/server/remoteTelemetryService';
 import { IUriIdentityService } from 'vs/platform/uriIdentity/common/uriIdentity';
 import { UriIdentityService } from 'vs/platform/uriIdentity/common/uriIdentityService';
+import { ICredentialsService } from 'vs/workbench/services/credentials/common/credentials';
+import { KeytarCredentialsService } from 'vs/workbench/services/credentials/node/credentialsService';
 
 const SHUTDOWN_TIMEOUT = 5 * 60 * 1000;
 
@@ -329,6 +331,9 @@ export class RemoteExtensionHostAgentServer extends Disposable {
 		);
 		services.set(IPtyService, ptyService);
 
+		const credentialsService = instantiationService.createInstance(KeytarCredentialsService);
+		services.set(ICredentialsService, credentialsService);
+
 		return instantiationService.invokeFunction(accessor => {
 			const remoteExtensionEnvironmentChannel = new RemoteAgentEnvironmentChannel(this._connectionToken, this._environmentService, extensionManagementCLIService, this._logService, accessor.get(IRemoteTelemetryService), appInsightsAppender, this._productService);
 			this._socketServer.registerChannel('remoteextensionsenvironment', remoteExtensionEnvironmentChannel);
@@ -343,6 +348,9 @@ export class RemoteExtensionHostAgentServer extends Disposable {
 			const extensionManagementService = accessor.get(IExtensionManagementService);
 			const channel = new ExtensionManagementChannel(extensionManagementService, (ctx: RemoteAgentConnectionContext) => this._getUriTransformer(ctx.remoteAuthority));
 			this._socketServer.registerChannel('extensions', channel);
+
+			const credentialsChannel = ProxyChannel.fromService<RemoteAgentConnectionContext>(accessor.get(ICredentialsService));
+			this._socketServer.registerChannel('credentials', credentialsChannel);
 
 			// clean up deprecated extensions
 			(extensionManagementService as ExtensionManagementService).removeDeprecatedExtensions();

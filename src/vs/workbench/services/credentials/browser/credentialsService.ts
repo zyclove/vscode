@@ -8,6 +8,8 @@ import { registerSingleton } from 'vs/platform/instantiation/common/extensions';
 import { IWorkbenchEnvironmentService } from 'vs/workbench/services/environment/common/environmentService';
 import { Emitter } from 'vs/base/common/event';
 import { Disposable } from 'vs/base/common/lifecycle';
+import { IRemoteAgentService } from 'vs/workbench/services/remote/common/remoteAgentService';
+import { ProxyChannel } from 'vs/base/parts/ipc/common/ipc';
 
 export class BrowserCredentialsService extends Disposable implements ICredentialsService {
 
@@ -59,6 +61,18 @@ export class BrowserCredentialsService extends Disposable implements ICredential
 		if (this.credentialsProvider.clear) {
 			return this.credentialsProvider.clear();
 		}
+	}
+}
+
+// @ts-ignore: interface is implemented via proxy
+export class RemoteCredentialsService implements ICredentialsService {
+
+	declare readonly _serviceBrand: undefined;
+
+	constructor(
+		@IRemoteAgentService remoteAgentService: IRemoteAgentService,
+	) {
+		return ProxyChannel.toService<ICredentialsService>(remoteAgentService.getConnection()!.getChannel('localizations'));
 	}
 }
 
@@ -114,4 +128,5 @@ class InMemoryCredentialsProvider implements ICredentialsProvider {
 	}
 }
 
+// TODO: register browser or remote based on situation
 registerSingleton(ICredentialsService, BrowserCredentialsService, true);
