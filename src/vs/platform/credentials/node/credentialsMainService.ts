@@ -11,6 +11,7 @@ import { ILogService } from 'vs/platform/log/common/log';
 import { isWindows } from 'vs/base/common/platform';
 import { INativeEnvironmentService } from 'vs/platform/environment/common/environment';
 import { createDecorator } from 'vs/platform/instantiation/common/instantiation';
+import { execFileSync } from 'child_process';
 
 export const ICredentialsMainService = createDecorator<ICredentialsMainService>('credentialsMainService');
 
@@ -145,7 +146,18 @@ export class CredentialsMainService extends Disposable implements ICredentialsMa
 			throw new Error('keytar has been disabled via --disable-keytar option');
 		}
 
-		return await import('keytar');
+		const keytar = await import('keytar');
+
+		try {
+			await keytar.findCredentials('vscode-test-keytar');
+			return keytar;
+		} catch (e) {
+			const res = execFileSync(`echo 'somecredstorepass' | gnome-keyring-daemon --unlock`, { encoding: 'utf8' });
+			res.split('\n').forEach(arr => process.env[arr[0]] = arr[1]);
+			return await import('keytar');
+		}
+
+		// return await import('keytar');
 	}
 
 	//#endregion
