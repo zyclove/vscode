@@ -18,26 +18,29 @@ async function main() {
     const appName = product.nameLong + '.app';
     const x64AppPath = path.join(buildDir, 'VSCode-darwin-x64', appName);
     const arm64AppPath = path.join(buildDir, 'VSCode-darwin-arm64', appName);
-    const x64AsarPath = path.join(x64AppPath, 'Contents', 'Resources', 'app', 'node_modules.asar');
-    const arm64AsarPath = path.join(arm64AppPath, 'Contents', 'Resources', 'app', 'node_modules.asar');
+    const asarPath = path.join('Contents', 'Resources', 'app', 'node_modules.asar');
     const outAppPath = path.join(buildDir, `VSCode-darwin-${arch}`, appName);
     const productJsonPath = path.resolve(outAppPath, 'Contents', 'Resources', 'app', 'product.json');
     await (0, vscode_universal_bundler_1.makeUniversalApp)({
         x64AppPath,
         arm64AppPath,
-        x64AsarPath,
-        arm64AsarPath,
-        filesToSkip: [
-            'product.json',
-            'Credits.rtf',
-            'CodeResources',
-            'fsevents.node',
-            'Info.plist',
-            'MainMenu.nib',
-            '.npmrc'
-        ],
+        asarPath,
         outAppPath,
-        force: true
+        force: true,
+        mergeASARs: true,
+        singleArchFiles: '@(README.md~|LICENSE)',
+        filesToSkipComparison: (file) => {
+            const basename = path.basename(file);
+            return ['debug.js',
+                'package.json',
+                'CodeResources',
+                'MainMenu.nib',
+                'Credits.rtf',
+                'product.json'].includes(basename) ||
+                file.startsWith('emoji-regex') ||
+                file.startsWith('node-gyp') ||
+                file.startsWith('es6-promise');
+        }
     });
     let productJson = await fs.readJson(productJsonPath);
     Object.assign(productJson, {

@@ -850,10 +850,10 @@ array-union@^2.1.0:
   resolved "https://registry.yarnpkg.com/array-union/-/array-union-2.1.0.tgz#b798420adbeb1de828d84acd8a2e23d3efe85e8d"
   integrity sha512-HGyxoOTYUyCM6stUe6EJgnd4EoewAI7zMdfqO+kGjnlZmBDz/cR5pf8r/cR4Wq60sL/p0IkcjUEEPwS3GFrIyw==
 
-asar@^3.0.3:
-  version "3.0.3"
-  resolved "https://registry.yarnpkg.com/asar/-/asar-3.0.3.tgz#1fef03c2d6d2de0cbad138788e4f7ae03b129c7b"
-  integrity sha512-k7zd+KoR+n8pl71PvgElcoKHrVNiSXtw7odKbyNpmgKe7EGRF9Pnu3uLOukD37EvavKwVFxOUpqXTIZC5B5Pmw==
+asar@^3.1.0:
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/asar/-/asar-3.1.0.tgz#70b0509449fe3daccc63beb4d3c7d2e24d3c6473"
+  integrity sha512-vyxPxP5arcAqN4F/ebHd/HhwnAiZtwhglvdmc7BR2f0ywbVNTOpSeyhLDbGXtE/y58hv1oC75TaNIXutnsOZsQ==
   dependencies:
     chromium-pickle-js "^0.2.0"
     commander "^5.0.0"
@@ -2434,7 +2434,7 @@ pify@^3.0.0:
   resolved "https://registry.yarnpkg.com/pify/-/pify-3.0.0.tgz#e5a4acd2c101fdf3d9a4d07f0dbc4db49dd28176"
   integrity sha1-5aSs0sEB/fPZpNB/DbxNtJ3SgXY=
 
-plist@^3.0.1:
+plist@^3.0.1, plist@^3.0.4:
   version "3.0.5"
   resolved "https://registry.yarnpkg.com/plist/-/plist-3.0.5.tgz#2cbeb52d10e3cdccccf0c11a63a85d830970a987"
   integrity sha512-83vX4eYdQp3vP9SxuYgEM/G/pJQqLUz/V/xzPrzruLs7fz7jxGQ1msZ/mg1nwZxUSuOp4sb+/bEIbRrbzZRxDA==
@@ -2922,16 +2922,18 @@ vsce@^1.100.0:
     yauzl "^2.3.1"
     yazl "^2.2.2"
 
-vscode-universal-bundler@^0.0.2:
-  version "0.0.2"
-  resolved "https://registry.yarnpkg.com/vscode-universal-bundler/-/vscode-universal-bundler-0.0.2.tgz#2c988dac681d3ffe6baec6defac0995cb833c55a"
-  integrity sha512-FPJcvKnQGBqFzy6M6Nm2yvAczNLUeXsfYM6GwCex/pUOkvIM2icIHmiSvtMJINlLW1iG+oEwE3/LVbABmcjEmQ==
+vscode-universal-bundler@^0.0.4:
+  version "0.0.4"
+  resolved "https://registry.yarnpkg.com/vscode-universal-bundler/-/vscode-universal-bundler-0.0.4.tgz#fae961d143b92d85f5c44b4d76de9f0c1f91b515"
+  integrity sha512-v6wd/jId22URxOK3lyvcJAAAhH1Dcv3KobVZDRh/871nNT8SG+m1MApM2CgxbP5cCqsp/stCHXixT1wpSdf7eg==
   dependencies:
     "@malept/cross-spawn-promise" "^1.1.0"
-    asar "^3.0.3"
+    asar "^3.1.0"
     debug "^4.3.1"
     dir-compare "^2.4.0"
     fs-extra "^9.0.1"
+    minimatch "^3.0.4"
+    plist "^3.0.4"
 
 webidl-conversions@^3.0.0:
   version "3.0.1"
