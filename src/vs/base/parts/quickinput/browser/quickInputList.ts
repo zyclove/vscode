@@ -227,7 +227,7 @@ class ListElementRenderer implements IListRenderer<ListElement, IListElementTemp
 class ListElementDelegate implements IListVirtualDelegate<ListElement> {
 
 	getHeight(element: ListElement): number {
-		return element.saneDetail ? 44 : 22;
+		return element.saneDetail ? 44 : 32;
 	}
 
 	getTemplateId(element: ListElement): string {

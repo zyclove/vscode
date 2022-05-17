@@ -68,6 +68,7 @@ export interface IQuickInputWidgetStyles {
 	quickInputTitleBackground?: Color;
 	contrastBorder?: Color;
 	widgetShadow?: Color;
+	menuSeparatorBackground?: Color;
 }
 
 const $ = dom.$;
@@ -1163,7 +1164,7 @@ class InputBox extends QuickInput implements IInputBox {
 }
 
 export class QuickInputController extends Disposable {
-	private static readonly MAX_WIDTH = 600; // Max total width of quick input widget
+	private static readonly MAX_WIDTH = 720; // Max total width of quick input widget
 
 	private idPrefix: string;
 	private ui: QuickInputUI | undefined;
@@ -1756,7 +1757,7 @@ export class QuickInputController extends Disposable {
 
 	private updateLayout() {
 		if (this.ui) {
-			this.ui.container.style.top = `${this.titleBarOffset}px`;
+			this.ui.container.style.top = this.titleBarOffset ? `${this.titleBarOffset}px` : '6px';
 
 			const style = this.ui.container.style;
 			const width = Math.min(this.dimension!.width * 0.62 /* golden cut */, QuickInputController.MAX_WIDTH);
@@ -1781,12 +1782,13 @@ export class QuickInputController extends Disposable {
 				quickInputForeground,
 				contrastBorder,
 				widgetShadow,
+				menuSeparatorBackground
 			} = this.styles.widget;
 			this.ui.titleBar.style.backgroundColor = quickInputTitleBackground ? quickInputTitleBackground.toString() : '';
 			this.ui.container.style.backgroundColor = quickInputBackground ? quickInputBackground.toString() : '';
 			this.ui.container.style.color = quickInputForeground ? quickInputForeground.toString() : '';
-			this.ui.container.style.border = contrastBorder ? `1px solid ${contrastBorder}` : '';
-			this.ui.container.style.boxShadow = widgetShadow ? `0 0 8px 2px ${widgetShadow}` : '';
+			this.ui.container.style.border = contrastBorder ? `1px solid ${contrastBorder}` : `1px solid ${menuSeparatorBackground}`;
+			this.ui.container.style.boxShadow = widgetShadow ? `0 0 16px 2px ${widgetShadow}` : '';
 			this.ui.inputBox.style(this.styles.inputBox);
 			this.ui.count.style(this.styles.countBadge);
 			this.ui.ok.style(this.styles.button);
