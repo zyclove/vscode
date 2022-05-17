@@ -10,6 +10,7 @@
 	left: 50%;
 	margin-left: -300px;
 	border-radius: 4px;
+	border: 1px solid #494949;
 }
 
 .quick-input-titlebar {
@@ -95,7 +96,8 @@
 	border-top-left-radius: 4px;
 	height: 100%;
 	outline: none;
-	border-bottom: 1px solid var(--vscode-menu-separatorBackground);
+	border-bottom: 1px solid #494949;
+	background-color: transparent !important;
 }
 
 .quick-input-widget.show-checkboxes .quick-input-box,
