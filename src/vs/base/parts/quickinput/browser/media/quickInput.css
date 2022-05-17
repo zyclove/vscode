@@ -160,7 +160,7 @@
 }
 
 .quick-input-list {
-	line-height: 32px;
+	line-height: 28px;
 	margin-top: 8px;
 }
 
@@ -174,7 +174,7 @@
 
 .quick-input-list .monaco-list {
 	overflow: hidden;
-	max-height: calc(20 * 32px);
+	max-height: calc(20 * 28px);
 }
 
 .quick-input-list .quick-input-list-entry {
