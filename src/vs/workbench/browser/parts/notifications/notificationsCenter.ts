@@ -28,6 +28,7 @@ import { INotificationService, NotificationsFilter } from 'vs/platform/notificat
 import { IConfigurationService } from 'vs/platform/configuration/common/configuration';
 import { Codicon } from 'vs/base/common/codicons';
 import { registerIcon } from 'vs/platform/theme/common/iconRegistry';
+import { IQuickInputService, IQuickPickItem, IQuickPickSeparator } from 'vs/platform/quickinput/common/quickInput';
 
 export class NotificationsCenter extends Themable implements INotificationsCenterController {
 
@@ -59,6 +60,8 @@ export class NotificationsCenter extends Themable implements INotificationsCente
 		@IKeybindingService private readonly keybindingService: IKeybindingService,
 		@INotificationService private readonly notificationService: INotificationService,
 		@IConfigurationService private readonly configurationService: IConfigurationService,
+		@IQuickInputService private readonly quickInputService: IQuickInputService,
+
 	) {
 		super(themeService);
 
@@ -356,17 +359,31 @@ export class NotificationsCenter extends Themable implements INotificationsCente
 
 	toggleDoNotDisturbMode(): void {
 		const isDoNotDisturbMode = this.configurationService.getValue<boolean>('notifications.experimental.doNotDisturbMode');
-		this.configurationService.updateValue('notifications.experimental.doNotDisturbMode', !isDoNotDisturbMode);
-		if (this._isVisible) {
-			this.updateTitle();
-		}
+
+		const quickPick = this.quickInputService.createQuickPick();
+
+		const disabledItems: (IQuickPickItem | IQuickPickSeparator)[] = [{ label: `Turn On Do Not Disturb Mode` }, { type: 'separator', label: 'More Options' }, { label: `Turn On For 1 Hour` }, { label: `Turn On For 8 Hours` },];
+		const enabledItems: (IQuickPickItem | IQuickPickSeparator)[] = [{ label: `Turn Off Do Not Disturb Mode` }, { type: 'separator', label: 'More Options' }, { label: `Turn Off In 1 Hour` }, { label: `Turn Off In 8 Hours` },];
+
+		quickPick.items = isDoNotDisturbMode === false ? disabledItems : enabledItems;
+		quickPick.show();
+
+		quickPick.onDidChangeSelection((selection) => {
+			if (selection[0]) {
+				this.configurationService.updateValue('notifications.experimental.doNotDisturbMode', !isDoNotDisturbMode);
+				if (this._isVisible) {
+					this.updateTitle();
+				}
+			}
+			quickPick.hide();
+		});
 	}
 
 	updateDoNotDisturbMode(): void {
 		const isDoNotDisturbMode = this.configurationService.getValue<boolean>('notifications.experimental.doNotDisturbMode');
 
 		if (isDoNotDisturbMode === true) {
-			this.notificationService.setFilter(NotificationsFilter.ERROR);
+			this.notificationService.setFilter(NotificationsFilter.SILENT);
 		} else {
 			this.notificationService.setFilter(NotificationsFilter.OFF);
 		}

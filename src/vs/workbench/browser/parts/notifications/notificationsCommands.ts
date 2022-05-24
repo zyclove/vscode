@@ -246,8 +246,10 @@ export function registerNotificationCommands(center: INotificationsCenterControl
 	CommandsRegistry.registerCommand(CLEAR_ALL_NOTIFICATIONS, () => center.clearAll());
 
 	// Toggle Do Not Disturb Mode
-	CommandsRegistry.registerCommand(TOGGLE_DO_NOT_DISTURB_MODE, () => center.toggleDoNotDisturbMode());
-
+	CommandsRegistry.registerCommand(TOGGLE_DO_NOT_DISTURB_MODE, () => {
+		center.toggleDoNotDisturbMode();
+		// center.hide();
+	});
 
 	// Commands for Command Palette
 	const category = { value: localize('notifications', "Notifications"), original: 'Notifications' };

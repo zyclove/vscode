@@ -689,7 +689,7 @@ const registry = Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Con
 				'type': 'boolean',
 				'default': false,
 				'tags': ['experimental'],
-				'description': localize('notifications.experimental.doNotDisturbMode', "Hides information and warning toast notifications when enabled. Error toast notifications will still be shown.")
+				'description': localize('notifications.experimental.doNotDisturbMode', "Hides information, warning, and error toasts when enabled.")
 			},
 		}
 	});

@@ -6,13 +6,14 @@
 import { INotificationsModel, INotificationChangeEvent, NotificationChangeType, IStatusMessageChangeEvent, StatusMessageChangeType, IStatusMessageViewItem } from 'vs/workbench/common/notifications';
 import { IStatusbarService, StatusbarAlignment, IStatusbarEntryAccessor, IStatusbarEntry } from 'vs/workbench/services/statusbar/browser/statusbar';
 import { Disposable, IDisposable, dispose } from 'vs/base/common/lifecycle';
-import { HIDE_NOTIFICATIONS_CENTER, SHOW_NOTIFICATIONS_CENTER } from 'vs/workbench/browser/parts/notifications/notificationsCommands';
+import { HIDE_NOTIFICATIONS_CENTER, SHOW_NOTIFICATIONS_CENTER, TOGGLE_DO_NOT_DISTURB_MODE } from 'vs/workbench/browser/parts/notifications/notificationsCommands';
 import { localize } from 'vs/nls';
 import { IConfigurationService } from 'vs/platform/configuration/common/configuration';
 
 export class NotificationsStatus extends Disposable {
 
 	private notificationsCenterStatusItem: IStatusbarEntryAccessor | undefined;
+	private doNotDisturbStatusItem: IStatusbarEntryAccessor | undefined;
 	private newNotificationsCount = 0;
 
 	private currentStatusMessage: [IStatusMessageViewItem, IDisposable] | undefined;
@@ -39,7 +40,7 @@ export class NotificationsStatus extends Disposable {
 	private registerListeners(): void {
 		this._register(this.model.onDidChangeNotification(e => this.onDidChangeNotification(e)));
 		this._register(this.model.onDidChangeStatusMessage(e => this.onDidChangeStatusMessage(e)));
-		this._register(this.configurationService.onDidChangeConfiguration(() => this.updateNotificationsCenterStatusItem()));
+		this._register(this.configurationService.onDidChangeConfiguration(() => this.updateDoNotDisturbStatusItem()));
 	}
 
 
@@ -59,6 +60,37 @@ export class NotificationsStatus extends Disposable {
 		this.updateNotificationsCenterStatusItem();
 	}
 
+	private updateDoNotDisturbStatusItem(): void {
+		let isDoNotDisturbMode = this.configurationService.getValue('notifications.experimental.doNotDisturbMode');
+
+		const onProperties: IStatusbarEntry = {
+			name: localize('status.doNotDisturb', "Do Not Disturb"),
+			text: '$(do-not-disturb)',
+			ariaLabel: localize('status.doNotDisturb', "Do Not Disturb"),
+			command: TOGGLE_DO_NOT_DISTURB_MODE,
+			tooltip: 'Do Not Disturb Mode is Enabled',
+		};
+
+		const offProperties: IStatusbarEntry = {
+			name: localize('status.doNotDisturb', "Do Not Disturb"),
+			text: '',
+			ariaLabel: localize('status.doNotDisturb', "Do Not Disturb"),
+			command: TOGGLE_DO_NOT_DISTURB_MODE,
+			tooltip: 'Do Not Disturb Mode is Enabled',
+		};
+
+		if (!this.doNotDisturbStatusItem && isDoNotDisturbMode === true) {
+			this.doNotDisturbStatusItem = this.statusbarService.addEntry(
+				onProperties,
+				'status.doNotDisturb',
+				StatusbarAlignment.RIGHT,
+				10 /* TODO: find real way to reliably place this next to notification bell */
+			);
+		} else {
+			this.doNotDisturbStatusItem?.update(isDoNotDisturbMode === true ? onProperties : offProperties);
+		}
+	}
+
 	private updateNotificationsCenterStatusItem(): void {
 		// Figure out how many notifications have progress only if neither
 		// toasts are visible nor center is visible. In that case we still
@@ -72,9 +104,8 @@ export class NotificationsStatus extends Disposable {
 			}
 		}
 
-
 		// Show the bell with a dot if there are unread or in-progress notifications
-		const defaultStatusProperties: IStatusbarEntry = {
+		const statusProperties: IStatusbarEntry = {
 			name: localize('status.notifications', "Notifications"),
 			text: `${notificationsInProgress > 0 || this.newNotificationsCount > 0 ? '$(bell-dot)' : '$(bell)'}`,
 			ariaLabel: localize('status.notifications', "Notifications"),
@@ -83,16 +114,6 @@ export class NotificationsStatus extends Disposable {
 			showBeak: this.isNotificationsCenterVisible
 		};
 
-		const isDoNotDisturbModeStatusProperties: IStatusbarEntry = {
-			name: localize('status.doNotDisturb', "Do Not Disturb"),
-			text: '$(notifications-muted)',
-			ariaLabel: localize('status.doNotDisturb', "Do Not Disturb"),
-			command: this.isNotificationsCenterVisible ? HIDE_NOTIFICATIONS_CENTER : SHOW_NOTIFICATIONS_CENTER,
-			tooltip: 'Do Not Disturb Mode is Enabled',
-		};
-
-		let isDoNotDisturbMode = this.configurationService.getValue('notifications.experimental.doNotDisturbMode');
-		const statusProperties = isDoNotDisturbMode === true ? isDoNotDisturbModeStatusProperties : defaultStatusProperties;
 
 		if (!this.notificationsCenterStatusItem) {
 			this.notificationsCenterStatusItem = this.statusbarService.addEntry(
