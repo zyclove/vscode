@@ -552,6 +552,8 @@ export class Codicon implements CSSIcon {
 	public static readonly arrowCircleLeft = new Codicon('arrow-circle-left', { fontCharacter: '\\ebfd' });
 	public static readonly arrowCircleRight = new Codicon('arrow-circle-right', { fontCharacter: '\\ebfe' });
 	public static readonly arrowCircleUp = new Codicon('arrow-circle-up', { fontCharacter: '\\ebff' });
+	public static readonly mergeEditorLayoutColumn = new Codicon('merge-editor-layout-column', { fontCharacter: '\\F101' });
+	public static readonly mergeEditorLayoutMixed = new Codicon('merge-editor-layout-mixed', { fontCharacter: '\\F102' });
 
 
 	// derived icons, that could become separate icons

@@ -47,10 +47,10 @@ registerAction2(class ToggleLayout extends Action2 {
 		super({
 			id: 'merge.toggleLayout',
 			title: localize('toggle.title', "Switch to column view"),
-			icon: Codicon.layoutCentered,
+			icon: Codicon.mergeEditorLayoutMixed,
 			toggled: {
 				condition: ctxUsesColumnLayout,
-				icon: Codicon.layoutPanel,
+				icon: Codicon.mergeEditorLayoutColumn,
 				title: localize('toggle.title2', "Switch to 2 by 1 view"),
 			},
 			menu: [{
