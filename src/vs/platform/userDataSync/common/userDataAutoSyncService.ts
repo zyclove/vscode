@@ -23,13 +23,15 @@ import { IUserDataSyncMachinesService } from 'vs/platform/userDataSync/common/us
 
 type AutoSyncClassification = {
 	owner: 'sandy081';
-	sources: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; isMeasurement: true };
+	comment: 'Information about the sources triggering auto sync';
+	sources: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; isMeasurement: true; comment: 'Source that triggered auto sync' };
 };
 
 type AutoSyncErrorClassification = {
 	owner: 'sandy081';
-	code: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; isMeasurement: true };
-	service: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; isMeasurement: true };
+	comment: 'Information about the error that causes auto sync to fail';
+	code: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; isMeasurement: true; comment: 'error code' };
+	service: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; isMeasurement: true; comment: 'Settings sync service for which this error has occurred' };
 };
 
 const disableMachineEventuallyKey = 'sync.disableMachineEventually';
@@ -52,26 +54,26 @@ export class UserDataAutoSyncService extends Disposable implements IUserDataAuto
 
 	private lastSyncUrl: URI | undefined;
 	private get syncUrl(): URI | undefined {
-		const value = this.storageService.get(storeUrlKey, StorageScope.GLOBAL);
+		const value = this.storageService.get(storeUrlKey, StorageScope.APPLICATION);
 		return value ? URI.parse(value) : undefined;
 	}
 	private set syncUrl(syncUrl: URI | undefined) {
 		if (syncUrl) {
-			this.storageService.store(storeUrlKey, syncUrl.toString(), StorageScope.GLOBAL, StorageTarget.MACHINE);
+			this.storageService.store(storeUrlKey, syncUrl.toString(), StorageScope.APPLICATION, StorageTarget.MACHINE);
 		} else {
-			this.storageService.remove(storeUrlKey, StorageScope.GLOBAL);
+			this.storageService.remove(storeUrlKey, StorageScope.APPLICATION);
 		}
 	}
 
 	private previousProductQuality: string | undefined;
 	private get productQuality(): string | undefined {
-		return this.storageService.get(productQualityKey, StorageScope.GLOBAL);
+		return this.storageService.get(productQualityKey, StorageScope.APPLICATION);
 	}
 	private set productQuality(productQuality: string | undefined) {
 		if (productQuality) {
-			this.storageService.store(productQualityKey, productQuality, StorageScope.GLOBAL, StorageTarget.MACHINE);
+			this.storageService.store(productQualityKey, productQuality, StorageScope.APPLICATION, StorageTarget.MACHINE);
 		} else {
-			this.storageService.remove(productQualityKey, StorageScope.GLOBAL);
+			this.storageService.remove(productQualityKey, StorageScope.APPLICATION);
 		}
 	}
 
@@ -192,11 +194,11 @@ export class UserDataAutoSyncService extends Disposable implements IUserDataAuto
 			this.updateEnablement(false);
 
 			// Reset Session
-			this.storageService.remove(sessionIdKey, StorageScope.GLOBAL);
+			this.storageService.remove(sessionIdKey, StorageScope.APPLICATION);
 
 			// Reset
 			if (everywhere) {
-				this.telemetryService.publicLog2<{}, { owner: 'sandy081' }>('sync/turnOffEveryWhere');
+				this.telemetryService.publicLog2<{}, { owner: 'sandy081'; comment: 'Reporting when settings sync is turned off in all devices' }>('sync/turnOffEveryWhere');
 				await this.userDataSyncService.reset();
 			} else {
 				await this.userDataSyncService.resetLocal();
@@ -313,7 +315,7 @@ export class UserDataAutoSyncService extends Disposable implements IUserDataAuto
 	}
 
 	private async disableMachineEventually(): Promise<void> {
-		this.storageService.store(disableMachineEventuallyKey, true, StorageScope.GLOBAL, StorageTarget.MACHINE);
+		this.storageService.store(disableMachineEventuallyKey, true, StorageScope.APPLICATION, StorageTarget.MACHINE);
 		await timeout(1000 * 60 * 10);
 
 		// Return if got stopped meanwhile.
@@ -330,11 +332,11 @@ export class UserDataAutoSyncService extends Disposable implements IUserDataAuto
 	}
 
 	private hasToDisableMachineEventually(): boolean {
-		return this.storageService.getBoolean(disableMachineEventuallyKey, StorageScope.GLOBAL, false);
+		return this.storageService.getBoolean(disableMachineEventuallyKey, StorageScope.APPLICATION, false);
 	}
 
 	private stopDisableMachineEventually(): void {
-		this.storageService.remove(disableMachineEventuallyKey, StorageScope.GLOBAL);
+		this.storageService.remove(disableMachineEventuallyKey, StorageScope.APPLICATION);
 	}
 
 	private sources: string[] = [];
@@ -479,7 +481,7 @@ class AutoSync extends Disposable {
 				}
 			}
 
-			const sessionId = this.storageService.get(sessionIdKey, StorageScope.GLOBAL);
+			const sessionId = this.storageService.get(sessionIdKey, StorageScope.APPLICATION);
 			// Server session is different from client session
 			if (sessionId && this.manifest && sessionId !== this.manifest.session) {
 				if (this.hasSyncServiceChanged()) {
@@ -519,7 +521,7 @@ class AutoSync extends Disposable {
 
 			// Update local session id
 			if (this.manifest && this.manifest.session !== sessionId) {
-				this.storageService.store(sessionIdKey, this.manifest.session, StorageScope.GLOBAL, StorageTarget.MACHINE);
+				this.storageService.store(sessionIdKey, this.manifest.session, StorageScope.APPLICATION, StorageTarget.MACHINE);
 			}
 
 			// Return if cancellation is requested

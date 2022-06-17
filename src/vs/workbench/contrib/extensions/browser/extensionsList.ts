@@ -187,15 +187,17 @@ export class Renderer implements IPagedRenderer<IExtension, ITemplateData> {
 		data.extensionDisposables = dispose(data.extensionDisposables);
 
 		const updateEnablement = async () => {
-			let isDisabled = false;
+			let disabled = false;
+			const deprecated = !!extension.deprecationInfo;
 			if (extension.state === ExtensionState.Uninstalled) {
-				isDisabled = !!extension.deprecationInfo || !(await this.extensionsWorkbenchService.canInstall(extension));
+				disabled = deprecated || !(await this.extensionsWorkbenchService.canInstall(extension));
 			} else if (extension.local && !isLanguagePackExtension(extension.local.manifest)) {
 				const runningExtensions = await this.extensionService.getExtensions();
 				const runningExtension = runningExtensions.filter(e => areSameExtensions({ id: e.identifier.value, uuid: e.uuid }, extension.identifier))[0];
-				isDisabled = !(runningExtension && extension.server === this.extensionManagementServerService.getExtensionManagementServer(toExtension(runningExtension)));
+				disabled = !(runningExtension && extension.server === this.extensionManagementServerService.getExtensionManagementServer(toExtension(runningExtension)));
 			}
-			data.root.classList.toggle('disabled', isDisabled);
+			data.element.classList.toggle('deprecated', deprecated);
+			data.root.classList.toggle('disabled', disabled);
 		};
 		updateEnablement();
 		this.extensionService.onDidChangeExtensions(() => updateEnablement(), this, data.extensionDisposables);
@@ -212,8 +214,13 @@ export class Renderer implements IPagedRenderer<IExtension, ITemplateData> {
 
 		data.name.textContent = extension.displayName;
 		data.description.textContent = extension.description;
-		data.publisherDisplayName.textContent = extension.publisherDisplayName;
-		data.verifiedPublisherIcon.style.display = extension.publisherDomain?.verified ? 'inherit' : 'none';
+
+		const updatePublisher = () => {
+			data.publisherDisplayName.textContent = extension.publisherDisplayName;
+			data.verifiedPublisherIcon.style.display = extension.publisherDomain?.verified ? 'inherit' : 'none';
+		};
+		updatePublisher();
+		Event.filter(this.extensionsWorkbenchService.onChange, e => !!e && areSameExtensions(e.identifier, extension.identifier))(() => updatePublisher(), this, data.extensionDisposables);
 
 		data.installCount.style.display = '';
 		data.ratings.style.display = '';
