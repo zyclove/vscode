@@ -69,6 +69,18 @@
 		},
 		{
 			"component": {
+				"type": "other",
+				"other": {
+					"name": "ffmpeg",
+					"downloadUrl": "https://source.chromium.org/chromium/chromium/src/+/main:third_party/ffmpeg/",
+					"version": "4.4"
+				}
+			},
+			"isOnlyProductionDependency": true,
+			"version": "4.4"
+		},
+		{
+			"component": {
 				"type": "git",
 				"git": {
 					"name": "inno setup",
