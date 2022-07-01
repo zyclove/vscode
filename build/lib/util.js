@@ -14,7 +14,6 @@ const fs = require("fs");
 const _rimraf = require("rimraf");
 const VinylFile = require("vinyl");
 const git = require("./git");
-const root = path.dirname(path.dirname(__dirname));
 const NoCancellationToken = { isCancellationRequested: () => false };
 function incremental(streamProvider, initial, supportsCancellation) {
     const input = es.through();
@@ -298,9 +297,10 @@ function streamToPromise(stream) {
 }
 exports.streamToPromise = streamToPromise;
 function getElectronVersion() {
-    const yarnrc = fs.readFileSync(path.join(root, '.yarnrc'), 'utf8');
-    const target = /^target "(.*)"$/m.exec(yarnrc)[1];
-    return target;
+    /*const yarnrc = fs.readFileSync(path.join(root, '.yarnrc'), 'utf8');
+    const target = /^target "(.*)"$/m.exec(yarnrc)![1];
+    return target;*/
+    return '18.100.0';
 }
 exports.getElectronVersion = getElectronVersion;
 function acquireWebNodePaths() {

@@ -59,21 +59,21 @@
 				"type": "git",
 				"git": {
 					"name": "electron",
-					"repositoryUrl": "https://github.com/electron/electron",
-					"commitHash": "6165f6afc9af6f9ab4e32f4a7a8b0818f11e766a"
+					"repositoryUrl": "https://domoreexp.visualstudio.com/Teamspace/_git/electron-electron",
+					"commitHash": "b4a075f46dbc28ae957301deedeff74918a41398"
 				}
 			},
 			"isOnlyProductionDependency": true,
 			"license": "MIT",
-			"version": "18.3.5"
+			"version": "18.100.0"
 		},
 		{
 			"component": {
-				"type": "other",
-				"other": {
+				"type": "git",
+				"git": {
 					"name": "ffmpeg",
-					"downloadUrl": "https://source.chromium.org/chromium/chromium/src/+/main:third_party/ffmpeg/",
-					"version": "4.4"
+					"repositoryUrl": "https://chromium.googlesource.com/chromium/third_party/ffmpeg/",
+					"commitHash": "574c39cce3231c69bc9a02ac475c27d944bdb113"
 				}
 			},
 			"isOnlyProductionDependency": true,

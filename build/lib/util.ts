@@ -16,7 +16,7 @@ import { ThroughStream } from 'through';
 import * as sm from 'source-map';
 import * as git from './git';
 
-const root = path.dirname(path.dirname(__dirname));
+//const root = path.dirname(path.dirname(__dirname));
 
 export interface ICancellationToken {
 	isCancellationRequested(): boolean;
@@ -369,9 +369,10 @@ export function streamToPromise(stream: NodeJS.ReadWriteStream): Promise<void> {
 }
 
 export function getElectronVersion(): string {
-	const yarnrc = fs.readFileSync(path.join(root, '.yarnrc'), 'utf8');
+	/*const yarnrc = fs.readFileSync(path.join(root, '.yarnrc'), 'utf8');
 	const target = /^target "(.*)"$/m.exec(yarnrc)![1];
-	return target;
+	return target;*/
+	return '18.100.0';
 }
 
 export function acquireWebNodePaths() {
