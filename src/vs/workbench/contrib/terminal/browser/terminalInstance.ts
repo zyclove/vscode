@@ -86,6 +86,10 @@ import type { IMarker, ITerminalAddon, Terminal as XTermTerminal } from 'xterm';
 import { IOpenerService } from 'vs/platform/opener/common/opener';
 import { IGenericMarkProperties } from 'vs/platform/terminal/common/terminalProcess';
 import { ICommandService } from 'vs/platform/commands/common/commands';
+import { TerminalSuggestWidget } from 'vs/workbench/contrib/terminal/browser/terminalSuggestWidget';
+import { CompletionModel } from 'vs/editor/contrib/suggest/browser/completionModel';
+import { CompletionItem } from 'vs/editor/contrib/suggest/browser/suggest';
+import { CompletionItemKind } from 'vs/editor/common/languages';
 
 const enum Constants {
 	/**
@@ -1062,6 +1066,88 @@ export class TerminalInstance extends Disposable implements ITerminalInstance {
 		xterm.raw.attachCustomKeyEventHandler((event: KeyboardEvent): boolean => {
 			// Disable all input if the terminal is exiting
 			if (this._isExiting) {
+				return false;
+			}
+
+			console.log('event.key');
+			if (event.key === 'Tab') {
+				console.log('  tab');
+				const suggest = this._instantiationService.createInstance(TerminalSuggestWidget, this);
+				const model = new CompletionModel([
+					new CompletionItem(
+						{ column: 0, lineNumber: 0 },
+						{
+							insertText: 'hello',
+							kind: CompletionItemKind.Function,
+							label: 'Hello',
+							range: {
+								endColumn: 0,
+								endLineNumber: 0,
+								insert: {
+									endColumn: 0,
+									endLineNumber: 0,
+									startColumn: 0,
+									startLineNumber: 0
+								},
+								replace: {
+									endColumn: 0,
+									endLineNumber: 0,
+									startColumn: 0,
+									startLineNumber: 0
+								},
+								startColumn: 0,
+								startLineNumber: 0
+							}
+						},
+						{} as any,
+						{} as any
+					)
+				], 0, { characterCountDelta: 0, leadingLineContent: '' }, {
+					distance(anchor, suggestion) {
+						return 0;
+					}
+				}, {
+					insertMode: 'insert',
+					filterGraceful: true,
+					snippetsPreventQuickSuggestions: false,
+					localityBonus: false,
+					shareSuggestSelections: true,
+					showIcons: true,
+					showStatusBar: true,
+					preview: true,
+					previewMode: 'prefix', // | 'subword' | 'subwordSmart',
+					showInlineDetails: true,
+					showMethods: true,
+					showFunctions: true,
+					showConstructors: true,
+					showDeprecated: true,
+					showFields: true,
+					showVariables: true,
+					showClasses: true,
+					showStructs: true,
+					showInterfaces: true,
+					showModules: true,
+					showProperties: true,
+					showEvents: true,
+					showOperators: true,
+					showUnits: true,
+					showValues: true,
+					showConstants: true,
+					showEnums: true,
+					showEnumMembers: true,
+					showKeywords: true,
+					showWords: true,
+					showColors: true,
+					showFiles: true,
+					showReferences: true,
+					showFolders: true,
+					showTypeParameters: true,
+					showIssues: true,
+					showUsers: true,
+					showSnippets: true,
+				}, 'none');
+				suggest.showSuggestions(model, 0, true, true);
+				event.preventDefault();
 				return false;
 			}
 
