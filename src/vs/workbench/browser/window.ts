@@ -221,11 +221,12 @@ export class BrowserWindow extends Disposable {
 						if (showResult.choice === 0) {
 							invokeProtocolHandler();
 						} else if (showResult.choice === 1) {
+
 							// Route the user to the appropriate install link
 							await this.openerService.open(URI.parse(
 								this.productService.quality === 'stable'
-									? `http://aka.ms/vscode-install`
-									: `http://aka.ms/vscode-install-insiders`
+									? 'https://aka.ms/vscode-install'
+									: 'https://aka.ms/vscode-install-insiders'
 							));
 
 							// Re-show the dialog so that the user can come back after installing and try again
