@@ -24,7 +24,7 @@ export interface ICredentialsChangeEvent {
 
 export interface ICredentialsService extends ICredentialsProvider {
 	readonly _serviceBrand: undefined;
-	readonly onDidChangePassword: Event<ICredentialsChangeEvent>;
+	readonly onDidChangePwd: Event<ICredentialsChangeEvent>;
 
 	/*
 	 * Each CredentialsService must provide a prefix that will be used

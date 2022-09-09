@@ -25,7 +25,7 @@ export class MainThreadSecretState extends Disposable implements MainThreadSecre
 		super();
 		this._proxy = extHostContext.getProxy(ExtHostContext.ExtHostSecretState);
 
-		this._register(this.credentialsService.onDidChangePassword(async e => {
+		this._register(this.credentialsService.onDidChangePwd(async e => {
 			const extensionId = e.service.substring((await this.secretStoragePrefix).length);
 			this._proxy.$onDidChangePassword({ extensionId, key: e.account });
 		}));

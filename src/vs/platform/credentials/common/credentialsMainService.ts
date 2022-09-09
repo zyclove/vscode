@@ -23,7 +23,7 @@ export abstract class BaseCredentialsMainService extends Disposable implements I
 	declare readonly _serviceBrand: undefined;
 
 	private _onDidChangePassword: Emitter<ICredentialsChangeEvent> = this._register(new Emitter());
-	readonly onDidChangePassword = this._onDidChangePassword.event;
+	readonly onDidChangePwd = this._onDidChangePassword.event;
 
 	protected _keytarCache: KeytarModule | undefined;
 

@@ -15,8 +15,8 @@ export class BrowserCredentialsService extends Disposable implements ICredential
 
 	declare readonly _serviceBrand: undefined;
 
-	private _onDidChangePassword = this._register(new Emitter<ICredentialsChangeEvent>());
-	readonly onDidChangePassword = this._onDidChangePassword.event;
+	private _onDidChangePwd = this._register(new Emitter<ICredentialsChangeEvent>());
+	readonly onDidChangePwd = this._onDidChangePwd.event;
 
 	private credentialsProvider: ICredentialsProvider;
 
@@ -51,13 +51,13 @@ export class BrowserCredentialsService extends Disposable implements ICredential
 	async setPassword(service: string, account: string, password: string): Promise<void> {
 		await this.credentialsProvider.setPassword(service, account, password);
 
-		this._onDidChangePassword.fire({ service, account });
+		this._onDidChangePwd.fire({ service, account });
 	}
 
 	async deletePassword(service: string, account: string): Promise<boolean> {
 		const didDelete = await this.credentialsProvider.deletePassword(service, account);
 		if (didDelete) {
-			this._onDidChangePassword.fire({ service, account });
+			this._onDidChangePwd.fire({ service, account });
 		}
 
 		return didDelete;
