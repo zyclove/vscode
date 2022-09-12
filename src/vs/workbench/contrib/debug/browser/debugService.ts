@@ -63,27 +63,27 @@ export class DebugService implements IDebugService {
 	private readonly _onDidNewSession: Emitter<IDebugSession>;
 	private readonly _onWillNewSession: Emitter<IDebugSession>;
 	private readonly _onDidEndSession: Emitter<IDebugSession>;
-	private debugStorage: DebugStorage;
-	private model: DebugModel;
-	private viewModel: ViewModel;
-	private telemetry: DebugTelemetry;
-	private taskRunner: DebugTaskRunner;
-	private configurationManager: ConfigurationManager;
+	private activity: IDisposable | undefined;
 	private adapterManager: AdapterManager;
-	private disposables = new DisposableStore();
+	private breakpointsExist!: IContextKey<boolean>;
+	private breakpointsToSendOnResourceSaved: Set<URI>;
+	private chosenEnvironments: { [key: string]: string };
+	private configurationManager: ConfigurationManager;
+	private debugStorage: DebugStorage;
 	private debugType!: IContextKey<string>;
 	private debugState!: IContextKey<string>;
-	private inDebugMode!: IContextKey<boolean>;
 	private debugUx!: IContextKey<string>;
-	private breakpointsExist!: IContextKey<boolean>;
 	private disassemblyViewFocus!: IContextKey<boolean>;
-	private breakpointsToSendOnResourceSaved: Set<URI>;
+	private inDebugMode!: IContextKey<boolean>;
 	private initializing = false;
 	private _initializingOptions: IDebugSessionOptions | undefined;
+	private model: DebugModel;
 	private previousState: State | undefined;
 	private sessionCancellationTokens = new Map<string, CancellationTokenSource>();
-	private activity: IDisposable | undefined;
-	private chosenEnvironments: { [key: string]: string };
+	private telemetry: DebugTelemetry;
+	private taskRunner: DebugTaskRunner;
+	private toDispose = new DisposableStore();
+	private viewModel: ViewModel;
 
 	constructor(
 		@IEditorService private readonly editorService: IEditorService,
@@ -115,9 +115,9 @@ export class DebugService implements IDebugService {
 		this._onDidEndSession = new Emitter<IDebugSession>();
 
 		this.adapterManager = this.instantiationService.createInstance(AdapterManager, { onDidNewSession: this.onDidNewSession });
-		this.disposables.add(this.adapterManager);
+		this.toDispose.add(this.adapterManager);
 		this.configurationManager = this.instantiationService.createInstance(ConfigurationManager, this.adapterManager);
-		this.disposables.add(this.configurationManager);
+		this.toDispose.add(this.configurationManager);
 		this.debugStorage = this.instantiationService.createInstance(DebugStorage);
 
 		contextKeyService.bufferChangeEvents(() => {
@@ -140,11 +140,11 @@ export class DebugService implements IDebugService {
 		this.viewModel = new ViewModel(contextKeyService);
 		this.taskRunner = this.instantiationService.createInstance(DebugTaskRunner);
 
-		this.disposables.add(this.fileService.registerProvider(DEBUG_MEMORY_SCHEME, new DebugMemoryFileSystemProvider(this)));
-		this.disposables.add(this.fileService.onDidFilesChange(e => this.onFileChanges(e)));
-		this.disposables.add(this.lifecycleService.onWillShutdown(this.dispose, this));
+		this.toDispose.add(this.fileService.registerProvider(DEBUG_MEMORY_SCHEME, new DebugMemoryFileSystemProvider(this)));
+		this.toDispose.add(this.fileService.onDidFilesChange(e => this.onFileChanges(e)));
+		this.toDispose.add(this.lifecycleService.onWillShutdown(this.dispose, this));
 
-		this.disposables.add(this.extensionHostDebugService.onAttachSession(event => {
+		this.toDispose.add(this.extensionHostDebugService.onAttachSession(event => {
 			const session = this.model.getSession(event.sessionId, true);
 			if (session) {
 				// EH was started in debug mode -> attach to it
@@ -154,25 +154,25 @@ export class DebugService implements IDebugService {
 				this.launchOrAttachToSession(session);
 			}
 		}));
-		this.disposables.add(this.extensionHostDebugService.onTerminateSession(event => {
+		this.toDispose.add(this.extensionHostDebugService.onTerminateSession(event => {
 			const session = this.model.getSession(event.sessionId);
 			if (session && session.subId === event.subId) {
 				session.disconnect();
 			}
 		}));
 
-		this.disposables.add(this.viewModel.onDidFocusStackFrame(() => {
+		this.toDispose.add(this.viewModel.onDidFocusStackFrame(() => {
 			this.onStateChange();
 		}));
-		this.disposables.add(this.viewModel.onDidFocusSession(() => {
+		this.toDispose.add(this.viewModel.onDidFocusSession(() => {
 			this.onStateChange();
 		}));
-		this.disposables.add(Event.any(this.adapterManager.onDidRegisterDebugger, this.configurationManager.onDidSelectConfiguration)(() => {
+		this.toDispose.add(Event.any(this.adapterManager.onDidRegisterDebugger, this.configurationManager.onDidSelectConfiguration)(() => {
 			const debugUxValue = (this.state !== State.Inactive || (this.configurationManager.getAllConfigurations().length > 0 && this.adapterManager.hasEnabledDebuggers())) ? 'default' : 'simple';
 			this.debugUx.set(debugUxValue);
 			this.debugStorage.storeDebugUxState(debugUxValue);
 		}));
-		this.disposables.add(this.model.onDidChangeCallStack(() => {
+		this.toDispose.add(this.model.onDidChangeCallStack(() => {
 			const numberOfSessions = this.model.getSessions().filter(s => !s.parentSession).length;
 			this.activity?.dispose();
 			if (numberOfSessions > 0) {
@@ -182,9 +182,9 @@ export class DebugService implements IDebugService {
 				}
 			}
 		}));
-		this.disposables.add(this.model.onDidChangeBreakpoints(() => setBreakpointsExistContext()));
+		this.toDispose.add(this.model.onDidChangeBreakpoints(() => setBreakpointsExistContext()));
 
-		this.disposables.add(editorService.onDidActiveEditorChange(() => {
+		this.toDispose.add(editorService.onDidActiveEditorChange(() => {
 			this.contextKeyService.bufferChangeEvents(() => {
 				if (editorService.activeEditor === DisassemblyViewInput.instance) {
 					this.disassemblyViewFocus.set(true);
@@ -194,7 +194,7 @@ export class DebugService implements IDebugService {
 			});
 		}));
 
-		this.disposables.add(this.lifecycleService.onBeforeShutdown(() => {
+		this.toDispose.add(this.lifecycleService.onBeforeShutdown(() => {
 			for (const editor of editorService.editors) {
 				// Editors will not be valid on window reload, so close them.
 				if (editor.resource?.scheme === DEBUG_MEMORY_SCHEME) {
@@ -225,7 +225,7 @@ export class DebugService implements IDebugService {
 	}
 
 	dispose(): void {
-		this.disposables.dispose();
+		this.toDispose.dispose();
 	}
 
 	//---- state management
@@ -635,7 +635,7 @@ export class DebugService implements IDebugService {
 				this.viewModel.setFocus(undefined, this.viewModel.focusedThread, session, false);
 			}
 		}, 200);
-		this.disposables.add(session.onDidChangeState(() => {
+		this.toDispose.add(session.onDidChangeState(() => {
 			if (session.state === State.Running && this.viewModel.focusedSession === session) {
 				sessionRunningScheduler.schedule();
 			}
@@ -644,7 +644,7 @@ export class DebugService implements IDebugService {
 			}
 		}));
 
-		this.disposables.add(session.onDidEndAdapter(async adapterExitEvent => {
+		this.toDispose.add(session.onDidEndAdapter(async adapterExitEvent => {
 
 			if (adapterExitEvent) {
 				if (adapterExitEvent.error) {
