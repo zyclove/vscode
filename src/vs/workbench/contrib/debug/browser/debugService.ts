@@ -57,19 +57,19 @@ export class DebugService implements IDebugService {
 	private readonly _onDidNewSession: Emitter<IDebugSession>;
 	private readonly _onWillNewSession: Emitter<IDebugSession>;
 	private readonly _onDidEndSession: Emitter<IDebugSession>;
-	private debugStorage: DebugStorage;
-	private model: DebugModel;
-	private viewModel: ViewModel;
-	private telemetry: DebugTelemetry;
-	private taskRunner: DebugTaskRunner;
-	private configurationManager: ConfigurationManager;
-	private adapterManager: AdapterManager;
-	private toDispose: IDisposable[];
+	private debugServiceDisposables: IDisposable[];
 	private debugType!: IContextKey<string>;
 	private debugState!: IContextKey<string>;
 	private inDebugMode!: IContextKey<boolean>;
 	private debugUx!: IContextKey<string>;
 	private breakpointsExist!: IContextKey<boolean>;
+	private adapterManager: AdapterManager;
+	private configurationManager: ConfigurationManager;
+	private debugStorage: DebugStorage;
+	private model: DebugModel;
+	private telemetry: DebugTelemetry;
+	private taskRunner: DebugTaskRunner;
+	private viewModel: ViewModel;
 	private breakpointsToSendOnResourceSaved: Set<URI>;
 	private initializing = false;
 	private previousState: State | undefined;
@@ -97,7 +97,7 @@ export class DebugService implements IDebugService {
 		@IQuickInputService private readonly quickInputService: IQuickInputService,
 		@IWorkspaceTrustRequestService private readonly workspaceTrustRequestService: IWorkspaceTrustRequestService
 	) {
-		this.toDispose = [];
+		this.debugServiceDisposables = [];
 
 		this.breakpointsToSendOnResourceSaved = new Set<URI>();
 
@@ -108,7 +108,7 @@ export class DebugService implements IDebugService {
 
 		this.adapterManager = this.instantiationService.createInstance(AdapterManager);
 		this.configurationManager = this.instantiationService.createInstance(ConfigurationManager, this.adapterManager);
-		this.toDispose.push(this.configurationManager);
+		this.debugServiceDisposables.push(this.configurationManager);
 		this.debugStorage = this.instantiationService.createInstance(DebugStorage);
 
 		contextKeyService.bufferChangeEvents(() => {
@@ -128,10 +128,10 @@ export class DebugService implements IDebugService {
 		this.viewModel = new ViewModel(contextKeyService);
 		this.taskRunner = this.instantiationService.createInstance(DebugTaskRunner);
 
-		this.toDispose.push(this.fileService.onDidFilesChange(e => this.onFileChanges(e)));
-		this.toDispose.push(this.lifecycleService.onDidShutdown(this.dispose, this));
+		this.debugServiceDisposables.push(this.fileService.onDidFilesChange(e => this.onFileChanges(e)));
+		this.debugServiceDisposables.push(this.lifecycleService.onDidShutdown(this.dispose, this));
 
-		this.toDispose.push(this.extensionHostDebugService.onAttachSession(event => {
+		this.debugServiceDisposables.push(this.extensionHostDebugService.onAttachSession(event => {
 			const session = this.model.getSession(event.sessionId, true);
 			if (session) {
 				// EH was started in debug mode -> attach to it
@@ -141,25 +141,25 @@ export class DebugService implements IDebugService {
 				this.launchOrAttachToSession(session);
 			}
 		}));
-		this.toDispose.push(this.extensionHostDebugService.onTerminateSession(event => {
+		this.debugServiceDisposables.push(this.extensionHostDebugService.onTerminateSession(event => {
 			const session = this.model.getSession(event.sessionId);
 			if (session && session.subId === event.subId) {
 				session.disconnect();
 			}
 		}));
 
-		this.toDispose.push(this.viewModel.onDidFocusStackFrame(() => {
+		this.debugServiceDisposables.push(this.viewModel.onDidFocusStackFrame(() => {
 			this.onStateChange();
 		}));
-		this.toDispose.push(this.viewModel.onDidFocusSession(() => {
+		this.debugServiceDisposables.push(this.viewModel.onDidFocusSession(() => {
 			this.onStateChange();
 		}));
-		this.toDispose.push(Event.any(this.adapterManager.onDidRegisterDebugger, this.configurationManager.onDidSelectConfiguration)(() => {
+		this.debugServiceDisposables.push(Event.any(this.adapterManager.onDidRegisterDebugger, this.configurationManager.onDidSelectConfiguration)(() => {
 			const debugUxValue = (this.state !== State.Inactive || (this.configurationManager.getAllConfigurations().length > 0 && this.adapterManager.hasDebuggers())) ? 'default' : 'simple';
 			this.debugUx.set(debugUxValue);
 			this.debugStorage.storeDebugUxState(debugUxValue);
 		}));
-		this.toDispose.push(this.model.onDidChangeCallStack(() => {
+		this.debugServiceDisposables.push(this.model.onDidChangeCallStack(() => {
 			const numberOfSessions = this.model.getSessions().filter(s => !s.parentSession).length;
 			if (this.activity) {
 				this.activity.dispose();
@@ -171,7 +171,7 @@ export class DebugService implements IDebugService {
 				}
 			}
 		}));
-		this.toDispose.push(this.model.onDidChangeBreakpoints(() => setBreakpointsExistContext()));
+		this.debugServiceDisposables.push(this.model.onDidChangeBreakpoints(() => setBreakpointsExistContext()));
 	}
 
 	getModel(): IDebugModel {
@@ -195,7 +195,7 @@ export class DebugService implements IDebugService {
 	}
 
 	dispose(): void {
-		this.toDispose = dispose(this.toDispose);
+		this.debugServiceDisposables = dispose(this.debugServiceDisposables);
 	}
 
 	//---- state management
@@ -579,7 +579,7 @@ export class DebugService implements IDebugService {
 				this.viewModel.setFocus(undefined, this.viewModel.focusedThread, session, false);
 			}
 		}, 200);
-		this.toDispose.push(session.onDidChangeState(() => {
+		this.debugServiceDisposables.push(session.onDidChangeState(() => {
 			if (session.state === State.Running && this.viewModel.focusedSession === session) {
 				sessionRunningScheduler.schedule();
 			}
@@ -588,7 +588,7 @@ export class DebugService implements IDebugService {
 			}
 		}));
 
-		this.toDispose.push(session.onDidEndAdapter(async adapterExitEvent => {
+		this.debugServiceDisposables.push(session.onDidEndAdapter(async adapterExitEvent => {
 
 			if (adapterExitEvent) {
 				if (adapterExitEvent.error) {
