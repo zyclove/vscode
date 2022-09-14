@@ -5,7 +5,6 @@
 
 // Imports
 import { Disposable } from 'vs/base/common/lifecycle';
-// TODO: Move css to bundle?
 import 'vs/css!./media/watermark';
 import * as nls from 'vs/nls';
 
