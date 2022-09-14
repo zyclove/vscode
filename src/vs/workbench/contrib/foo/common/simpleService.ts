@@ -3,6 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-export interface IFooService {
-	bar(): void;
+import { ISimpleService } from 'vs/workbench/contrib/foo/common/simple';
+
+export class SimpleService implements ISimpleService {
+	bar() {
+		console.log('FooService.bar called');
+	}
 }

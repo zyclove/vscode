@@ -8,7 +8,7 @@ import { registerSingleton } from 'vs/platform/instantiation/common/extensions';
 import { createDecorator, IInstantiationService } from 'vs/platform/instantiation/common/instantiation';
 import { Registry } from 'vs/platform/registry/common/platform';
 import { Extensions as WorkbenchExtensions, IWorkbenchContributionsRegistry } from 'vs/workbench/common/contributions';
-import { IFooService } from 'vs/workbench/contrib/foo/common/foo';
+import { ISimpleService } from 'vs/workbench/contrib/foo/common/simple';
 import { IServiceFetcher } from 'vs/workbench/contrib/foo/common/util';
 import { LifecyclePhase } from 'vs/workbench/services/lifecycle/common/lifecycle';
 
@@ -18,20 +18,20 @@ import { LifecyclePhase } from 'vs/workbench/services/lifecycle/common/lifecycle
 // Workbench contributions
 //
 
-class AsyncFooWorkbenchContribution {
+class AsyncSimpleWorkbenchContribution {
 	constructor(
 		@IInstantiationService instantiationService: IInstantiationService
 	) {
 		// Types of the imported file are pulled in correctly
-		import('vs/workbench/contrib/foo/common/fooWorkbenchContribution').then(e => {
-			instantiationService.createInstance(e.FooContribution, { EmitterCtor: Emitter });
+		import('vs/workbench/contrib/foo/common/simpleWorkbenchContribution').then(e => {
+			instantiationService.createInstance(e.SimpleContribution, { EmitterCtor: Emitter });
 		});
 	}
 }
 
 // TODO: Provide registerAsyncWorkbenchContribution convenience method
 Registry.as<IWorkbenchContributionsRegistry>(WorkbenchExtensions.Workbench)
-	.registerWorkbenchContribution(AsyncFooWorkbenchContribution, 'FooWorkbenchContribution', LifecyclePhase.Restored);
+	.registerWorkbenchContribution(AsyncSimpleWorkbenchContribution, 'SimpleWorkbenchContribution', LifecyclePhase.Restored);
 
 
 
@@ -39,28 +39,28 @@ Registry.as<IWorkbenchContributionsRegistry>(WorkbenchExtensions.Workbench)
 // Services
 //
 
-interface IFooServiceFetcher extends IServiceFetcher<IFooService> { }
-class FooServiceFetcher implements IFooServiceFetcher {
+interface ISimpleServiceFetcher extends IServiceFetcher<ISimpleService> { }
+class SimpleServiceFetcher implements ISimpleServiceFetcher {
 	_serviceBrand: undefined;
-	private _service?: Promise<IFooService>;
-	get service(): Promise<IFooService> {
+	private _service?: Promise<ISimpleService>;
+	get service(): Promise<ISimpleService> {
 		if (!this._service) {
-			this._service = import('vs/workbench/contrib/foo/common/fooService').then(e => this._instantiationService.createInstance(e.FooService));
+			this._service = import('vs/workbench/contrib/foo/common/simpleService').then(e => this._instantiationService.createInstance(e.SimpleService));
 		}
 		return this._service;
 	}
 	constructor(@IInstantiationService private readonly _instantiationService: IInstantiationService) { }
 }
 
-export const IFooServiceFetcher = createDecorator<IFooServiceFetcher>('fooServiceFetcher');
-registerSingleton(IFooServiceFetcher, FooServiceFetcher, true);
+export const ISimpleServiceFetcher = createDecorator<ISimpleServiceFetcher>('simpleServiceFetcher');
+registerSingleton(ISimpleServiceFetcher, SimpleServiceFetcher, true);
 
 // Use the async service in a regular bundled contribution
 class RegularWorkbenchContribution {
 	constructor(
-		@IFooServiceFetcher fooServiceFetcher: IFooServiceFetcher
+		@ISimpleServiceFetcher simpleServiceFetcher: ISimpleServiceFetcher
 	) {
-		fooServiceFetcher.service.then(e => e.bar());
+		simpleServiceFetcher.service.then(e => e.bar());
 	}
 }
 

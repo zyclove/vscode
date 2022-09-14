@@ -245,8 +245,9 @@ import 'vs/workbench/contrib/terminal/browser/terminal.contribution';
 import 'vs/workbench/contrib/terminal/browser/terminalView';
 
 // Async contrib examples
-import 'vs/workbench/contrib/foo/common/foo.contribution';
+import 'vs/workbench/contrib/foo/common/simple.contribution';
 import 'vs/workbench/contrib/foo/common/sharedBundle.contribution';
+import 'vs/workbench/contrib/foo/common/contribContext.contribution';
 
 // Relauncher
 import 'vs/workbench/contrib/relauncher/browser/relauncher.contribution';
