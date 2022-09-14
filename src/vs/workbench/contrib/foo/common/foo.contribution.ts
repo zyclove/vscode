@@ -3,13 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { createDecorator, IInstantiationService } from 'vs/platform/instantiation/common/instantiation';
-import { LifecyclePhase } from 'vs/workbench/services/lifecycle/common/lifecycle';
-import { Registry } from 'vs/platform/registry/common/platform';
-import { Extensions as WorkbenchExtensions, IWorkbenchContributionsRegistry } from 'vs/workbench/common/contributions';
 import { Emitter } from 'vs/base/common/event';
 import { registerSingleton } from 'vs/platform/instantiation/common/extensions';
+import { createDecorator, IInstantiationService } from 'vs/platform/instantiation/common/instantiation';
+import { Registry } from 'vs/platform/registry/common/platform';
+import { Extensions as WorkbenchExtensions, IWorkbenchContributionsRegistry } from 'vs/workbench/common/contributions';
 import { IFooService } from 'vs/workbench/contrib/foo/common/foo';
+import { IServiceFetcher } from 'vs/workbench/contrib/foo/common/util';
+import { LifecyclePhase } from 'vs/workbench/services/lifecycle/common/lifecycle';
+
+
 
 //
 // Workbench contributions
@@ -30,24 +33,23 @@ class AsyncFooWorkbenchContribution {
 Registry.as<IWorkbenchContributionsRegistry>(WorkbenchExtensions.Workbench)
 	.registerWorkbenchContribution(AsyncFooWorkbenchContribution, 'FooWorkbenchContribution', LifecyclePhase.Restored);
 
+
+
 //
 // Services
 //
 
-interface IFooServiceFetcher {
-	_serviceBrand: undefined;
-	service: Promise<IFooService>;
-}
-
+interface IFooServiceFetcher extends IServiceFetcher<IFooService> { }
 class FooServiceFetcher implements IFooServiceFetcher {
 	_serviceBrand: undefined;
 	private _service?: Promise<IFooService>;
 	get service(): Promise<IFooService> {
 		if (!this._service) {
-			this._service = import('vs/workbench/contrib/foo/common/fooService').then(e => new e.FooService());
+			this._service = import('vs/workbench/contrib/foo/common/fooService').then(e => this._instantiationService.createInstance(e.FooService));
 		}
 		return this._service;
 	}
+	constructor(@IInstantiationService private readonly _instantiationService: IInstantiationService) { }
 }
 
 export const IFooServiceFetcher = createDecorator<IFooServiceFetcher>('fooServiceFetcher');

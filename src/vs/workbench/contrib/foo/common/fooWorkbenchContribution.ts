@@ -6,8 +6,9 @@
 import type { Emitter } from 'vs/base/common/event';
 import { DisposableStore } from 'vs/base/common/lifecycle';
 import { IInstantiationService } from 'vs/platform/instantiation/common/instantiation';
+import { IWorkbenchContribution } from 'vs/workbench/common/contributions';
 
-export class FooContribution {
+export class FooContribution implements IWorkbenchContribution {
 	constructor(
 		outsideDependencies: { EmitterCtor: typeof Emitter },
 		@IInstantiationService instantiationService: IInstantiationService,
@@ -20,7 +21,8 @@ export class FooContribution {
 		// Example of injected object - this injects the object, note the `import type` at the top
 		const injectedObject = new outsideDependencies.EmitterCtor();
 		// TODO: This is not particularly ergonomic, is there a nicer way to get this to work?
-		//       Could pass a common context object around?
+		//       Could pass a common context object around with all base/platform objects?
+		// TODO: Enforce only import type is used outside contrib?
 
 		console.log({ inlinedObject, injectedObject });
 	}
