@@ -58,8 +58,8 @@ exports.workbenchDesktop = [
 	createModuleDescription('vs/platform/files/node/watcher/watcherMain'),
 	createModuleDescription('vs/platform/terminal/node/ptyHostMain'),
 	createModuleDescription('vs/workbench/api/node/extensionHostProcess'),
-	createModuleDescription('vs/workbench/contrib/foo/common/fooWorkbenchContribution'),
-	createModuleDescription('vs/workbench/contrib/foo/common/fooService'),
+	createModuleDescription('vs/workbench/contrib/foo/common/simpleWorkbenchContribution'),
+	createModuleDescription('vs/workbench/contrib/foo/common/simpleService'),
 	createModuleDescription('vs/workbench/contrib/foo/common/sharedBundleMain'),
 	createModuleDescription('vs/workbench/contrib/foo/common/contribContextWorkbenchContribution')
 ];

@@ -9,7 +9,7 @@ import { createDecorator, IInstantiationService } from 'vs/platform/instantiatio
 import { Registry } from 'vs/platform/registry/common/platform';
 import { Extensions as WorkbenchExtensions, IWorkbenchContributionsRegistry } from 'vs/workbench/common/contributions';
 import { ISimpleService } from 'vs/workbench/contrib/foo/common/simple';
-import { IServiceFetcher } from 'vs/workbench/contrib/foo/common/util';
+import { BaseServiceFetcher, IServiceFetcher } from 'vs/workbench/contrib/foo/common/util';
 import { LifecyclePhase } from 'vs/workbench/services/lifecycle/common/lifecycle';
 
 
@@ -40,16 +40,10 @@ Registry.as<IWorkbenchContributionsRegistry>(WorkbenchExtensions.Workbench)
 //
 
 interface ISimpleServiceFetcher extends IServiceFetcher<ISimpleService> { }
-class SimpleServiceFetcher implements ISimpleServiceFetcher {
-	_serviceBrand: undefined;
-	private _service?: Promise<ISimpleService>;
-	get service(): Promise<ISimpleService> {
-		if (!this._service) {
-			this._service = import('vs/workbench/contrib/foo/common/simpleService').then(e => this._instantiationService.createInstance(e.SimpleService));
-		}
-		return this._service;
+class SimpleServiceFetcher extends BaseServiceFetcher<ISimpleService> implements ISimpleServiceFetcher {
+	protected async _loadAndCreateService(instantiationService: IInstantiationService): Promise<ISimpleService> {
+		return instantiationService.createInstance((await import('vs/workbench/contrib/foo/common/simpleService')).SimpleService);
 	}
-	constructor(@IInstantiationService private readonly _instantiationService: IInstantiationService) { }
 }
 
 export const ISimpleServiceFetcher = createDecorator<ISimpleServiceFetcher>('simpleServiceFetcher');

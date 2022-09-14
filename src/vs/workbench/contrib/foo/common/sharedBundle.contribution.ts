@@ -8,7 +8,7 @@ import { createDecorator, IInstantiationService } from 'vs/platform/instantiatio
 import { Registry } from 'vs/platform/registry/common/platform';
 import { Extensions as WorkbenchExtensions, IWorkbenchContributionsRegistry } from 'vs/workbench/common/contributions';
 import { ISharedBundleService } from 'vs/workbench/contrib/foo/common/sharedBundle';
-import { IServiceFetcher } from 'vs/workbench/contrib/foo/common/util';
+import { BaseServiceFetcher, IServiceFetcher } from 'vs/workbench/contrib/foo/common/util';
 import { LifecyclePhase } from 'vs/workbench/services/lifecycle/common/lifecycle';
 
 
@@ -26,18 +26,10 @@ function loadSharedBundleModule(): Promise<typeof import('vs/workbench/contrib/f
 }
 
 interface ISharedBundleServiceFetcher extends IServiceFetcher<ISharedBundleService> { }
-class SharedBundleServiceFetcher implements ISharedBundleServiceFetcher {
-	_serviceBrand: undefined;
-
-	private _service?: Promise<ISharedBundleService>;
-	get service(): Promise<ISharedBundleService> {
-		if (!this._service) {
-			this._service = loadSharedBundleModule().then(e => this._instantiationService.createInstance(e.SharedBundleService));
-		}
-		return this._service;
+class SharedBundleServiceFetcher extends BaseServiceFetcher<ISharedBundleService> implements ISharedBundleServiceFetcher {
+	protected async _loadAndCreateService(instantiationService: IInstantiationService): Promise<ISharedBundleService> {
+		return instantiationService.createInstance((await loadSharedBundleModule()).SharedBundleService);
 	}
-
-	constructor(@IInstantiationService private readonly _instantiationService: IInstantiationService) { }
 }
 
 export const ISharedBundleServiceFetcher = createDecorator<ISharedBundleServiceFetcher>('sharedBundleServiceFetcher');
