@@ -59,6 +59,7 @@ exports.workbenchDesktop = [
 	createModuleDescription('vs/platform/terminal/node/ptyHostMain'),
 	createModuleDescription('vs/workbench/api/node/extensionHostProcess'),
 	createModuleDescription('vs/workbench/contrib/foo/common/fooWorkbenchContribution'),
+	createModuleDescription('vs/workbench/contrib/foo/common/fooService'),
 ];
 
 exports.workbenchWeb = [
