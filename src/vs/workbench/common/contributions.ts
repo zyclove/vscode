@@ -39,6 +39,8 @@ export interface IWorkbenchContributionsRegistry {
 	 */
 	registerWorkbenchContribution<Services extends BrandedService[]>(contribution: IWorkbenchContributionSignature<Services>, id: string, phase: LifecyclePhase): void;
 
+	registerAsyncWorkbenchContribution<Services extends BrandedService[]>(contribution: Promise<IWorkbenchContributionSignature<Services>>, id: string, phase: LifecyclePhase): void;
+
 	/**
 	 * Starts the registry by providing the required services.
 	 */
@@ -71,6 +73,10 @@ class WorkbenchContributionsRegistry implements IWorkbenchContributionsRegistry 
 
 			toBeInstantiated.push(contribution);
 		}
+	}
+
+	async registerAsyncWorkbenchContribution(ctor: Promise<IConstructorSignature<IWorkbenchContribution>>, id: string, phase: LifecyclePhase = LifecyclePhase.Starting): Promise<void> {
+		this.registerWorkbenchContribution(await ctor, id, phase);
 	}
 
 	start(accessor: ServicesAccessor): void {

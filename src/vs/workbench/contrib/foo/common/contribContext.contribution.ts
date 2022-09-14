@@ -38,6 +38,7 @@ class AsyncContribContextContribution {
 	}
 }
 
-// TODO: Provide registerAsyncWorkbenchContribution convenience method
+// TODO: registerAsyncWorkbenchContribution could be used to make AsyncContribContextContribution
+//       not needed if IAsyncContribContext became an injectable service
 Registry.as<IWorkbenchContributionsRegistry>(WorkbenchExtensions.Workbench)
 	.registerWorkbenchContribution(AsyncContribContextContribution, 'ContribContextContribution', LifecyclePhase.Restored);

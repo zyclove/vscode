@@ -35,16 +35,5 @@ class SharedBundleServiceFetcher extends BaseServiceFetcher<ISharedBundleService
 export const ISharedBundleServiceFetcher = createDecorator<ISharedBundleServiceFetcher>('sharedBundleServiceFetcher');
 registerSingleton(ISharedBundleServiceFetcher, SharedBundleServiceFetcher, true);
 
-class AsyncSharedBundleWorkbenchContribution {
-	constructor(
-		@IInstantiationService instantiationService: IInstantiationService
-	) {
-		loadSharedBundleModule().then(e => {
-			instantiationService.createInstance(e.SharedBundleContribution);
-		});
-	}
-}
-
-// TODO: Provide registerAsyncWorkbenchContribution convenience method
 Registry.as<IWorkbenchContributionsRegistry>(WorkbenchExtensions.Workbench)
-	.registerWorkbenchContribution(AsyncSharedBundleWorkbenchContribution, 'SharedBundleWorkbenchContribution', LifecyclePhase.Restored);
+	.registerAsyncWorkbenchContribution(loadSharedBundleModule().then(e => e.SharedBundleContribution), 'SharedBundleWorkbenchContribution', LifecyclePhase.Restored);
