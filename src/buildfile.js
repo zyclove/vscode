@@ -61,7 +61,8 @@ exports.workbenchDesktop = [
 	createModuleDescription('vs/workbench/contrib/foo/common/simpleWorkbenchContribution'),
 	createModuleDescription('vs/workbench/contrib/foo/common/simpleService'),
 	createModuleDescription('vs/workbench/contrib/foo/common/sharedBundleMain'),
-	createModuleDescription('vs/workbench/contrib/foo/common/contribContextWorkbenchContribution')
+	createModuleDescription('vs/workbench/contrib/foo/common/contribContextWorkbenchContribution'),
+	createModuleDescription('vs/workbench/contrib/watermark/browser/watermarkContribution')
 ];
 
 exports.workbenchWeb = [

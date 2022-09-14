@@ -284,7 +284,7 @@ import 'vs/workbench/contrib/themes/browser/themes.contribution';
 import 'vs/workbench/contrib/update/browser/update.contribution';
 
 // Watermark
-import 'vs/workbench/contrib/watermark/browser/watermark';
+import 'vs/workbench/contrib/watermark/browser/watermark.contribution';
 
 // Surveys
 import 'vs/workbench/contrib/surveys/browser/nps.contribution';

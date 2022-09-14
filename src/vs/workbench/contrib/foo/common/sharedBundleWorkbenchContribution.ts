@@ -4,10 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { IInstantiationService } from 'vs/platform/instantiation/common/instantiation';
-import { IWorkbenchContribution } from 'vs/workbench/common/contributions';
+import type { IWorkbenchContribution } from 'vs/workbench/common/contributions';
 
 export class SharedBundleContribution implements IWorkbenchContribution {
 	constructor(
+		// TODO: Can dependency injection be supported with dynamic imports?
+		//       Does it need a special separate decorator?
 		@IInstantiationService instantiationService: IInstantiationService,
 	) {
 		console.log('SharedBundleContribution init', instantiationService);

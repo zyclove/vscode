@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ISharedBundleService } from 'vs/workbench/contrib/foo/common/sharedBundle';
+import type { ISharedBundleService } from 'vs/workbench/contrib/foo/common/sharedBundle';
 
 export class SharedBundleService implements ISharedBundleService {
 	bar() {

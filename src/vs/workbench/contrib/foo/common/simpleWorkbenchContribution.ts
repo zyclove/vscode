@@ -5,13 +5,13 @@
 
 import type { Emitter } from 'vs/base/common/event';
 import { DisposableStore } from 'vs/base/common/lifecycle';
-import { IInstantiationService } from 'vs/platform/instantiation/common/instantiation';
+import type { IInstantiationService } from 'vs/platform/instantiation/common/instantiation';
 import { IWorkbenchContribution } from 'vs/workbench/common/contributions';
 
 export class SimpleContribution implements IWorkbenchContribution {
 	constructor(
-		outsideDependencies: { EmitterCtor: typeof Emitter },
-		@IInstantiationService instantiationService: IInstantiationService,
+		instantiationService: IInstantiationService,
+		outsideDependencies: { EmitterCtor: typeof Emitter }
 	) {
 		console.log('foo contribution init', instantiationService);
 

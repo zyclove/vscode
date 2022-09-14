@@ -33,7 +33,7 @@ class AsyncContribContextContribution {
 	) {
 		// Types of the imported file are pulled in correctly
 		import('vs/workbench/contrib/foo/common/contribContextWorkbenchContribution').then(e => {
-			instantiationService.createInstance(e.ContribContextContribution, asyncContribContext);
+			instantiationService.createInstance(e.ContribContextContribution, instantiationService, asyncContribContext);
 		});
 	}
 }

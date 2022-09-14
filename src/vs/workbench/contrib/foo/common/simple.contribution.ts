@@ -24,12 +24,11 @@ class AsyncSimpleWorkbenchContribution {
 	) {
 		// Types of the imported file are pulled in correctly
 		import('vs/workbench/contrib/foo/common/simpleWorkbenchContribution').then(e => {
-			instantiationService.createInstance(e.SimpleContribution, { EmitterCtor: Emitter });
+			instantiationService.createInstance(e.SimpleContribution, instantiationService, { EmitterCtor: Emitter });
 		});
 	}
 }
 
-// TODO: Provide registerAsyncWorkbenchContribution convenience method
 Registry.as<IWorkbenchContributionsRegistry>(WorkbenchExtensions.Workbench)
 	.registerWorkbenchContribution(AsyncSimpleWorkbenchContribution, 'SimpleWorkbenchContribution', LifecyclePhase.Restored);
 
