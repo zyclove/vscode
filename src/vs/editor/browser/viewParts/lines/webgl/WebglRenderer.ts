@@ -23,7 +23,9 @@ import { NULL_CELL_CODE } from 'vs/editor/browser/viewParts/lines/webgl/base/Con
 import { ViewportData } from 'vs/editor/common/viewLayout/viewLinesViewportData';
 import { ViewLineRenderingData } from 'vs/editor/common/viewModel';
 import { FontInfo } from 'vs/editor/common/config/fontInfo';
-import { EditorLayoutInfo } from 'vs/editor/common/config/editorOptions';
+import { EditorLayoutInfo, EditorOption } from 'vs/editor/common/config/editorOptions';
+import * as viewEvents from 'vs/editor/common/viewEvents';
+import { ViewContext } from 'vs/editor/common/viewModel/viewContext';
 
 /** Work variables to avoid garbage collection. */
 // const w: { fg: number; bg: number; hasFg: boolean; hasBg: boolean; isSelected: boolean } = {
@@ -64,8 +66,7 @@ export class WebglRenderer extends Disposable {
 	public get onContextLoss() { return this._onContextLoss.event; }
 
 	constructor(
-		private readonly _fontInfo: FontInfo,
-		private readonly _layoutInfo: EditorLayoutInfo,
+		private readonly _context: ViewContext,
 		private _viewportDims: {
 			cols: number;
 			rows: number;
@@ -100,7 +101,10 @@ export class WebglRenderer extends Disposable {
 			actualCellHeight: 0
 		};
 		this._devicePixelRatio = window.devicePixelRatio;
-		this._updateDimensions2(_layoutInfo);
+
+		const options = this._context.configuration.options;
+		const layoutInfo = options.get(EditorOption.layoutInfo);
+		this._updateDimensions2(layoutInfo);
 
 		this._canvas = document.createElement('canvas');
 
@@ -170,7 +174,9 @@ export class WebglRenderer extends Disposable {
 
 		this._rectangleRenderer.setColors();
 
-		this._refreshCharAtlas();
+		const options = this._context.configuration.options;
+		const fontInfo = options.get(EditorOption.fontInfo);
+		this._refreshCharAtlas(fontInfo);
 
 		// Force a full refresh
 		this._clearModel(true);
@@ -211,7 +217,9 @@ export class WebglRenderer extends Disposable {
 		this._glyphRenderer.setDimensions(this.dimensions);
 		this._glyphRenderer.onResize();
 
-		this._refreshCharAtlas();
+		const options = this._context.configuration.options;
+		const fontInfo = options.get(EditorOption.fontInfo);
+		this._refreshCharAtlas(fontInfo);
 
 		// Force a full refresh. Resizing `_glyphRenderer` should clear it already,
 		// so there is no need to clear it again here.
@@ -252,15 +260,6 @@ export class WebglRenderer extends Disposable {
 		}
 	}
 
-	public onOptionsChanged(): void {
-		for (const l of this._renderLayers) {
-			l.onOptionsChanged(/*this._terminal*/);
-		}
-		this._updateDimensions();
-		// TODO: Update FontInfo
-		this._refreshCharAtlas();
-	}
-
 	/**
 	 * Initializes members dependent on WebGL context state.
 	 */
@@ -281,14 +280,14 @@ export class WebglRenderer extends Disposable {
 	 * @param terminal The terminal.
 	 * @param colorSet The color set to use for the char atlas.
 	 */
-	private _refreshCharAtlas(): void {
+	private _refreshCharAtlas(fontInfo: FontInfo): void {
 		if (this.dimensions.scaledCharWidth <= 0 && this.dimensions.scaledCharHeight <= 0) {
 			// Mark as not attached so char atlas gets refreshed on next render
 			this._isAttached = false;
 			return;
 		}
 
-		const atlas = acquireCharAtlas(/*this._terminal, */this._colors, this.dimensions.scaledCellWidth, this.dimensions.scaledCellHeight, this.dimensions.scaledCharWidth, this.dimensions.scaledCharHeight, window.devicePixelRatio, this._viewportDims.options.lineHeight, this._fontInfo);
+		const atlas = acquireCharAtlas(/*this._terminal, */this._colors, this.dimensions.scaledCellWidth, this.dimensions.scaledCellHeight, this.dimensions.scaledCharWidth, this.dimensions.scaledCharHeight, window.devicePixelRatio, this._viewportDims.options.lineHeight, fontInfo);
 		if (!('getRasterizedGlyph' in atlas)) {
 			throw new Error('The webgl renderer only works with the webgl char atlas');
 		}
@@ -338,8 +337,11 @@ export class WebglRenderer extends Disposable {
 	public renderRows(start: number, end: number, viewportData: ViewportData): void {
 		if (!this._isAttached) {
 			if (window.document.body.contains(this._screenElement) && this._charSize.width && this._charSize.height) {
-				this._updateDimensions();
-				this._refreshCharAtlas();
+				const options = this._context.configuration.options;
+				const fontInfo = options.get(EditorOption.fontInfo);
+				const layoutInfo = options.get(EditorOption.layoutInfo);
+				this._updateDimensions2(layoutInfo);
+				this._refreshCharAtlas(fontInfo);
 				this._isAttached = true;
 			} else {
 				return;
@@ -775,5 +777,20 @@ export class WebglRenderer extends Disposable {
 
 	private _requestRedrawViewport(): void {
 		this._onRequestRedraw.fire({ start: 0, end: this._viewportDims.rows - 1 });
+	}
+
+	public onConfigurationChanged(e: viewEvents.ViewConfigurationChangedEvent): boolean {
+		const options = this._context.configuration.options;
+		const fontInfo = options.get(EditorOption.fontInfo);
+		// TODO: Wrapping
+		// const wrappingInfo = options.get(EditorOption.wrappingInfo);
+		const layoutInfo = options.get(EditorOption.layoutInfo);
+
+		for (const l of this._renderLayers) {
+			l.onOptionsChanged(/*this._terminal*/);
+		}
+		this._updateDimensions2(layoutInfo);
+		this._refreshCharAtlas(fontInfo);
+		return true;
 	}
 }
