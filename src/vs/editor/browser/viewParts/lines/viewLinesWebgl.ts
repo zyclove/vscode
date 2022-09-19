@@ -149,6 +149,7 @@ export class ViewLinesWebgl extends ViewPart implements IVisibleLinesHost<ViewLi
 
 		this._webglRenderer = new WebglRenderer(
 			fontInfo,
+			layoutInfo,
 			{
 				cols: 10,
 				rows: 10,

@@ -23,6 +23,7 @@ import { NULL_CELL_CODE } from 'vs/editor/browser/viewParts/lines/webgl/base/Con
 import { ViewportData } from 'vs/editor/common/viewLayout/viewLinesViewportData';
 import { ViewLineRenderingData } from 'vs/editor/common/viewModel';
 import { FontInfo } from 'vs/editor/common/config/fontInfo';
+import { EditorLayoutInfo } from 'vs/editor/common/config/editorOptions';
 
 /** Work variables to avoid garbage collection. */
 // const w: { fg: number; bg: number; hasFg: boolean; hasBg: boolean; isSelected: boolean } = {
@@ -64,6 +65,7 @@ export class WebglRenderer extends Disposable {
 
 	constructor(
 		private readonly _fontInfo: FontInfo,
+		private readonly _layoutInfo: EditorLayoutInfo,
 		private _viewportDims: {
 			cols: number;
 			rows: number;
@@ -98,7 +100,7 @@ export class WebglRenderer extends Disposable {
 			actualCellHeight: 0
 		};
 		this._devicePixelRatio = window.devicePixelRatio;
-		this._updateDimensions();
+		this._updateDimensions2(_layoutInfo);
 
 		this._canvas = document.createElement('canvas');
 
@@ -645,6 +647,7 @@ export class WebglRenderer extends Disposable {
 
 	/**
 	 * Recalculates the character and canvas dimensions.
+	 * @deprecated Move to _updateDimensions2
 	 */
 	private _updateDimensions(): void {
 		// TODO: Acquire CharSizeService properly
@@ -653,6 +656,61 @@ export class WebglRenderer extends Disposable {
 		if (!this._charSize.width || !this._charSize.height) {
 			return;
 		}
+
+		// Calculate the scaled character width. Width is floored as it must be drawn to an integer grid
+		// in order for the char atlas glyphs to not be blurry.
+		this.dimensions.scaledCharWidth = Math.floor(this._charSize.width * this._devicePixelRatio);
+
+		// Calculate the scaled character height. Height is ceiled in case devicePixelRatio is a
+		// floating point number in order to ensure there is enough space to draw the character to the
+		// cell.
+		this.dimensions.scaledCharHeight = Math.ceil(this._charSize.height * this._devicePixelRatio);
+
+		// Calculate the scaled cell height, if lineHeight is _not_ 1, the resulting value will be
+		// floored since lineHeight can never be lower then 1, this guarentees the scaled cell height
+		// will always be larger than scaled char height.
+		this.dimensions.scaledCellHeight = Math.floor(this.dimensions.scaledCharHeight * this._viewportDims.options.lineHeight);
+
+		// Calculate the y offset within a cell that glyph should draw at in order for it to be centered
+		// correctly within the cell.
+		this.dimensions.scaledCharTop = this._viewportDims.options.lineHeight === 1 ? 0 : Math.round((this.dimensions.scaledCellHeight - this.dimensions.scaledCharHeight) / 2);
+
+		// Calculate the scaled cell width, taking the letterSpacing into account.
+		this.dimensions.scaledCellWidth = this.dimensions.scaledCharWidth + Math.round(this._viewportDims.options.letterSpacing);
+
+		// Calculate the x offset with a cell that text should draw from in order for it to be centered
+		// correctly within the cell.
+		this.dimensions.scaledCharLeft = Math.floor(this._viewportDims.options.letterSpacing / 2);
+
+		// Recalculate the canvas dimensions, the scaled dimensions define the actual number of pixel in
+		// the canvas
+		this.dimensions.scaledCanvasHeight = this._viewportDims.rows * this.dimensions.scaledCellHeight;
+		this.dimensions.scaledCanvasWidth = this._viewportDims.cols * this.dimensions.scaledCellWidth;
+
+		// The the size of the canvas on the page. It's important that this rounds to nearest integer
+		// and not ceils as browsers often have floating point precision issues where
+		// `window.devicePixelRatio` ends up being something like `1.100000023841858` for example, when
+		// it's actually 1.1. Ceiling may causes blurriness as the backing canvas image is 1 pixel too
+		// large for the canvas element size.
+		this.dimensions.canvasHeight = Math.round(this.dimensions.scaledCanvasHeight / this._devicePixelRatio);
+		this.dimensions.canvasWidth = Math.round(this.dimensions.scaledCanvasWidth / this._devicePixelRatio);
+
+		// Get the CSS dimensions of an individual cell. This needs to be derived from the calculated
+		// device pixel canvas value above. CharMeasure.width/height by itself is insufficient when the
+		// page is not at 100% zoom level as CharMeasure is measured in CSS pixels, but the actual char
+		// size on the canvas can differ.
+		this.dimensions.actualCellHeight = this.dimensions.scaledCellHeight / this._devicePixelRatio;
+		this.dimensions.actualCellWidth = this.dimensions.scaledCellWidth / this._devicePixelRatio;
+	}
+
+	private _updateDimensions2(layoutInfo: EditorLayoutInfo) {
+		// Perform a new measure if the CharMeasure dimensions are not yet available
+		if (!this._charSize.width || !this._charSize.height) {
+			return;
+		}
+
+		this._viewportDims.cols = Math.ceil(layoutInfo.width / this._charSize.width);
+		this._viewportDims.rows = Math.ceil(layoutInfo.height / this._charSize.height);
 
 		// Calculate the scaled character width. Width is floored as it must be drawn to an integer grid
 		// in order for the char atlas glyphs to not be blurry.
