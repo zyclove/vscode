@@ -20,6 +20,8 @@ import { observeDevicePixelDimensions } from 'vs/editor/browser/viewParts/lines/
 import { IColorSet, IRenderDimensions, IRequestRedrawEvent } from 'vs/editor/browser/viewParts/lines/webgl/base/Types';
 import { Emitter } from 'vs/base/common/event';
 import { NULL_CELL_CODE } from 'vs/editor/browser/viewParts/lines/webgl/base/Constants';
+import { ViewportData } from 'vs/editor/common/viewLayout/viewLinesViewportData';
+import { ViewLineRenderingData } from 'vs/editor/common/viewModel';
 
 /** Work variables to avoid garbage collection. */
 // const w: { fg: number; bg: number; hasFg: boolean; hasBg: boolean; isSelected: boolean } = {
@@ -327,7 +329,7 @@ export class WebglRenderer extends Disposable {
 		return false;
 	}
 
-	public renderRows(start: number, end: number): void {
+	public renderRows(start: number, end: number, viewportData: ViewportData): void {
 		if (!this._isAttached) {
 			if (window.document.body.contains(this._screenElement) && this._charSize.width && this._charSize.height) {
 				this._updateDimensions();
@@ -350,20 +352,24 @@ export class WebglRenderer extends Disposable {
 		}
 
 		// Update model to reflect what's drawn
-		this._updateModel(start, end);
+		this._updateModel(start, end, viewportData);
 
 		// Render
 		this._rectangleRenderer.render();
 		this._glyphRenderer.render(this._model);
 	}
 
-	private _updateModel(start: number, end: number): void {
+	private _updateModel(start: number, end: number, viewportData: ViewportData): void {
 		let i, x, y: number;
-
+		let lineRenderingData: ViewLineRenderingData;
 		for (y = start; y <= end; y++) {
+			lineRenderingData = viewportData.getViewLineRenderingData(y);
 			this._model.lineLengths[y] = 0;
 			for (x = 0; x < this._viewportDims.cols; x++) {
-				const chars = 'a';
+				const chars = lineRenderingData.content[x];
+				if (chars === undefined) {
+					continue;
+				}
 				const code = chars.charCodeAt(0);
 				if (code !== NULL_CELL_CODE) {
 					this._model.lineLengths[y] = x + 1;
