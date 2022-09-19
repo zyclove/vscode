@@ -288,7 +288,7 @@ export class WebglRenderer extends Disposable {
 			return;
 		}
 
-		const atlas = acquireCharAtlas(/*this._terminal, */this._colors, this.dimensions.scaledCellWidth, this.dimensions.scaledCellHeight, this.dimensions.scaledCharWidth, this.dimensions.scaledCharHeight, window.devicePixelRatio, this._fontInfo);
+		const atlas = acquireCharAtlas(/*this._terminal, */this._colors, this.dimensions.scaledCellWidth, this.dimensions.scaledCellHeight, this.dimensions.scaledCharWidth, this.dimensions.scaledCharHeight, window.devicePixelRatio, this._viewportDims.options.lineHeight, this._fontInfo);
 		if (!('getRasterizedGlyph' in atlas)) {
 			throw new Error('The webgl renderer only works with the webgl char atlas');
 		}
@@ -709,6 +709,9 @@ export class WebglRenderer extends Disposable {
 		if (!this._charSize.width || !this._charSize.height) {
 			return;
 		}
+
+		this._charSize.width = 8;
+		this._charSize.height = 12;
 
 		this._viewportDims.cols = Math.ceil(layoutInfo.width / this._charSize.width);
 		this._viewportDims.rows = Math.ceil(layoutInfo.height / this._charSize.height);

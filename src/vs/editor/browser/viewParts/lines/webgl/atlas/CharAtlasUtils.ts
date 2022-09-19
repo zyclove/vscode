@@ -24,6 +24,7 @@ export function generateConfig(
 	//terminal: Terminal,
 	colors: IColorSet,
 	devicePixelRatio: number,
+	lineHeight: number,
 	fontInfo: FontInfo
 ): ICharAtlasConfig {
 	// null out some fields that don't matter
@@ -45,7 +46,7 @@ export function generateConfig(
 		customGlyphs: false, //terminal.options.customGlyphs,
 		devicePixelRatio,
 		letterSpacing: 0, //terminal.options.letterSpacing,
-		lineHeight: 1, //terminal.options.lineHeight,
+		lineHeight, //terminal.options.lineHeight,
 		scaledCellWidth,
 		scaledCellHeight,
 		scaledCharWidth,

@@ -37,9 +37,10 @@ export function acquireCharAtlas(
 	scaledCharWidth: number,
 	scaledCharHeight: number,
 	devicePixelRatio: number,
+	lineHeight: number,
 	fontInfo: FontInfo
 ): WebglCharAtlas {
-	const newConfig = generateConfig(scaledCellWidth, scaledCellHeight, scaledCharWidth, scaledCharHeight, /*terminal,*/ colors, devicePixelRatio, fontInfo);
+	const newConfig = generateConfig(scaledCellWidth, scaledCellHeight, scaledCharWidth, scaledCharHeight, /*terminal,*/ colors, devicePixelRatio, lineHeight, fontInfo);
 
 	// Check to see if the terminal already owns this config
 	// for (let i = 0; i < charAtlasCache.length; i++) {

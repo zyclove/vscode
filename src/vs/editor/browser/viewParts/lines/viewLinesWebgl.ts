@@ -154,7 +154,7 @@ export class ViewLinesWebgl extends ViewPart implements IVisibleLinesHost<ViewLi
 				cols: 10,
 				rows: 10,
 				options: {
-					lineHeight: 1,
+					lineHeight: fontInfo.lineHeight / fontInfo.fontSize,
 					letterSpacing: 0
 				}
 			},
