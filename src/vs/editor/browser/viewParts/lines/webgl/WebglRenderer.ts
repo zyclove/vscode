@@ -369,7 +369,8 @@ export class WebglRenderer extends Disposable {
 		let i, x, y: number;
 		let lineRenderingData: ViewLineRenderingData;
 		for (y = start; y <= end; y++) {
-			lineRenderingData = viewportData.getViewLineRenderingData(y);
+			// Convert 0- to 1-based
+			lineRenderingData = viewportData.getViewLineRenderingData(y + 1);
 			this._model.lineLengths[y] = 0;
 			for (x = 0; x < this._viewportDims.cols; x++) {
 				const chars = lineRenderingData.content[x];

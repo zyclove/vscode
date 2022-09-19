@@ -624,7 +624,8 @@ export class ViewLinesWebgl extends ViewPart implements IVisibleLinesHost<ViewLi
 
 	public renderText(viewportData: ViewportData): void {
 		console.log('ViewLinesWebgl#renderText', viewportData);
-		this._webglRenderer.renderRows(0, 10, viewportData);
+		// Convert from 1- to 0-based
+		this._webglRenderer.renderRows(viewportData.startLineNumber - 1, viewportData.endLineNumber - 1, viewportData);
 
 		// (1) render lines - ensures lines are in the DOM
 		this._visibleLines.renderLines(viewportData);
