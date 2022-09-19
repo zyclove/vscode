@@ -11,6 +11,7 @@ import { WebglCharAtlas } from './WebglCharAtlas';
 import { ICharAtlasConfig } from './Types';
 import { generateConfig } from 'vs/editor/browser/viewParts/lines/webgl/atlas/CharAtlasUtils';
 import { IColorSet } from 'vs/editor/browser/viewParts/lines/webgl/base/Types';
+import { FontInfo } from 'vs/editor/common/config/fontInfo';
 
 interface ICharAtlasCacheEntry {
 	atlas: WebglCharAtlas;
@@ -35,9 +36,10 @@ export function acquireCharAtlas(
 	scaledCellHeight: number,
 	scaledCharWidth: number,
 	scaledCharHeight: number,
-	devicePixelRatio: number
+	devicePixelRatio: number,
+	fontInfo: FontInfo
 ): WebglCharAtlas {
-	const newConfig = generateConfig(scaledCellWidth, scaledCellHeight, scaledCharWidth, scaledCharHeight, /*terminal,*/ colors, devicePixelRatio);
+	const newConfig = generateConfig(scaledCellWidth, scaledCellHeight, scaledCharWidth, scaledCharHeight, /*terminal,*/ colors, devicePixelRatio, fontInfo);
 
 	// Check to see if the terminal already owns this config
 	// for (let i = 0; i < charAtlasCache.length; i++) {

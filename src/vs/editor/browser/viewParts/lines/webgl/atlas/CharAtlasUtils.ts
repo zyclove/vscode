@@ -7,15 +7,25 @@
  * @license MIT
  */
 
-import { ICharAtlasConfig } from './Types';
+import { FontWeight, ICharAtlasConfig } from './Types';
 import { IColor, IColorSet } from 'vs/editor/browser/viewParts/lines/webgl/base/Types';
+import { FontInfo } from 'vs/editor/common/config/fontInfo';
 
 const NULL_COLOR: IColor = {
 	css: '',
 	rgba: 0
 };
 
-export function generateConfig(scaledCellWidth: number, scaledCellHeight: number, scaledCharWidth: number, scaledCharHeight: number, /*terminal: Terminal,*/ colors: IColorSet, devicePixelRatio: number): ICharAtlasConfig {
+export function generateConfig(
+	scaledCellWidth: number,
+	scaledCellHeight: number,
+	scaledCharWidth: number,
+	scaledCharHeight: number,
+	//terminal: Terminal,
+	colors: IColorSet,
+	devicePixelRatio: number,
+	fontInfo: FontInfo
+): ICharAtlasConfig {
 	// null out some fields that don't matter
 	const clonedColors: IColorSet = {
 		foreground: colors.foreground,
@@ -40,10 +50,10 @@ export function generateConfig(scaledCellWidth: number, scaledCellHeight: number
 		scaledCellHeight,
 		scaledCharWidth,
 		scaledCharHeight,
-		fontFamily: 'Hack', //terminal.options.fontFamily,
-		fontSize: 12, //terminal.options.fontSize,
-		fontWeight: 'normal', //terminal.options.fontWeight,
-		fontWeightBold: 'bold', //terminal.options.fontWeightBold,
+		fontFamily: fontInfo.fontFamily,
+		fontSize: fontInfo.fontSize,
+		fontWeight: fontInfo.fontWeight as FontWeight,
+		fontWeightBold: 'bold',
 		allowTransparency: false, //terminal.options.allowTransparency,
 		drawBoldTextInBrightColors: false, //terminal.options.drawBoldTextInBrightColors,
 		minimumContrastRatio: 1, //terminal.options.minimumContrastRatio,

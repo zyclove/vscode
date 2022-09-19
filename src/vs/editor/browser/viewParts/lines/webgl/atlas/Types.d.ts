@@ -8,7 +8,6 @@
  */
 
 import { IColorSet } from 'vs/editor/browser/viewParts/lines/webgl/base/Types';
-import { FontWeight } from 'xterm';
 
 export interface IGlyphIdentifier {
 	chars: string;
@@ -38,3 +37,5 @@ export interface ICharAtlasConfig {
 	minimumContrastRatio: number;
 	colors: IColorSet;
 }
+
+export type FontWeight = 'normal' | 'bold' | '100' | '200' | '300' | '400' | '500' | '600' | '700' | '800' | '900' | number;

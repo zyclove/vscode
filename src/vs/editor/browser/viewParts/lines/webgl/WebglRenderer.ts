@@ -22,6 +22,7 @@ import { Emitter } from 'vs/base/common/event';
 import { NULL_CELL_CODE } from 'vs/editor/browser/viewParts/lines/webgl/base/Constants';
 import { ViewportData } from 'vs/editor/common/viewLayout/viewLinesViewportData';
 import { ViewLineRenderingData } from 'vs/editor/common/viewModel';
+import { FontInfo } from 'vs/editor/common/config/fontInfo';
 
 /** Work variables to avoid garbage collection. */
 // const w: { fg: number; bg: number; hasFg: boolean; hasBg: boolean; isSelected: boolean } = {
@@ -62,6 +63,7 @@ export class WebglRenderer extends Disposable {
 	public get onContextLoss() { return this._onContextLoss.event; }
 
 	constructor(
+		private readonly _fontInfo: FontInfo,
 		private _viewportDims: {
 			cols: number;
 			rows: number;
@@ -253,6 +255,7 @@ export class WebglRenderer extends Disposable {
 			l.onOptionsChanged(/*this._terminal*/);
 		}
 		this._updateDimensions();
+		// TODO: Update FontInfo
 		this._refreshCharAtlas();
 	}
 
@@ -283,7 +286,7 @@ export class WebglRenderer extends Disposable {
 			return;
 		}
 
-		const atlas = acquireCharAtlas(/*this._terminal, */this._colors, this.dimensions.scaledCellWidth, this.dimensions.scaledCellHeight, this.dimensions.scaledCharWidth, this.dimensions.scaledCharHeight, window.devicePixelRatio);
+		const atlas = acquireCharAtlas(/*this._terminal, */this._colors, this.dimensions.scaledCellWidth, this.dimensions.scaledCellHeight, this.dimensions.scaledCharWidth, this.dimensions.scaledCharHeight, window.devicePixelRatio, this._fontInfo);
 		if (!('getRasterizedGlyph' in atlas)) {
 			throw new Error('The webgl renderer only works with the webgl char atlas');
 		}
@@ -310,7 +313,8 @@ export class WebglRenderer extends Disposable {
 	public clearCharAtlas(): void {
 		this._charAtlas?.clearTexture();
 		this._clearModel(true);
-		this._updateModel(0, this._viewportDims.rows - 1);
+		// TODO: Verify this works
+		// this._updateModel(0, this._viewportDims.rows - 1);
 		this._requestRedrawViewport();
 	}
 

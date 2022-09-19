@@ -130,12 +130,25 @@ export class ViewLinesWebgl extends ViewPart implements IVisibleLinesHost<ViewLi
 		this._visibleLines = new VisibleLinesCollection(this);
 		this.domNode = this._visibleLines.domNode;
 
+
+
 		this.canvasContainerDomNode = createFastDomNode(document.createElement('div'));
 		this.canvasContainerDomNode.setClassName('view-layer');
 		this.canvasContainerDomNode.setPosition('absolute');
 		this.canvasContainerDomNode.domNode.setAttribute('role', 'presentation');
 		this.canvasContainerDomNode.domNode.setAttribute('aria-hidden', 'true');
+
+
+
+		const conf = this._context.configuration;
+		const options = this._context.configuration.options;
+		const fontInfo = options.get(EditorOption.fontInfo);
+		const wrappingInfo = options.get(EditorOption.wrappingInfo);
+		const layoutInfo = options.get(EditorOption.layoutInfo);
+
+
 		this._webglRenderer = new WebglRenderer(
+			fontInfo,
 			{
 				cols: 10,
 				rows: 10,
@@ -161,11 +174,7 @@ export class ViewLinesWebgl extends ViewPart implements IVisibleLinesHost<ViewLi
 		);
 		console.log('webgl renderer', this._webglRenderer);
 
-		const conf = this._context.configuration;
-		const options = this._context.configuration.options;
-		const fontInfo = options.get(EditorOption.fontInfo);
-		const wrappingInfo = options.get(EditorOption.wrappingInfo);
-		const layoutInfo = options.get(EditorOption.layoutInfo);
+
 
 		this._lineHeight = options.get(EditorOption.lineHeight);
 		this._typicalHalfwidthCharacterWidth = fontInfo.typicalHalfwidthCharacterWidth;
