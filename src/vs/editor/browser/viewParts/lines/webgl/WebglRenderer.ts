@@ -356,6 +356,8 @@ export class WebglRenderer extends Disposable {
 					continue;
 				}
 
+				// TODO: Can we could get tokens in a more raw format and iterate through an array of them?
+				//       LineTokens.findIndexInTokensArray does a binary search of all tokens, this could save a bunch of processing
 				tokenId = lineRenderingData.tokens.findTokenIndexAtOffset(x);
 				presentation = lineRenderingData.tokens.getPresentation(tokenId);
 				tokenColor = colorMap[presentation.foreground];
