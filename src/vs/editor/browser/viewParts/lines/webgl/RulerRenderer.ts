@@ -167,7 +167,7 @@ export class RulerRenderer extends Disposable {
 		gl.bindVertexArray(this._vertexArrayObject);
 
 		gl.uniformMatrix4fv(this._projectionLocation, false, PROJECTION_MATRIX);
-		gl.uniform2f(this._sizeLocation, 1 / this._dimensions.scaledCanvasWidth, 1);
+		gl.uniform2f(this._sizeLocation, Math.round(window.devicePixelRatio) / this._dimensions.scaledCanvasWidth, 1);
 
 		// Bind attributes buffer and draw
 		gl.bindBuffer(gl.ARRAY_BUFFER, this._attributesBuffer);
