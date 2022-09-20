@@ -100,6 +100,7 @@ export class RectangleRenderer extends Disposable {
 
 		// Uniform locations
 		this._projectionLocation = throwIfFalsy(gl.getUniformLocation(this._program, 'u_projection'));
+		this._scrollOffsetLocation = throwIfFalsy(gl.getUniformLocation(this._program, 'u_scrolloffset'));
 
 		// Create and set the vertex array object
 		this._vertexArrayObject = gl.createVertexArray();
