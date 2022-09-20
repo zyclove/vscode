@@ -92,7 +92,6 @@ export class ViewLinesWebgl extends ViewPart implements IVisibleLinesHost<ViewLi
 	 */
 	private static readonly HORIZONTAL_EXTRA_PX = 30;
 
-	private readonly _linesContent: FastDomNode<HTMLElement>;
 	private readonly _textRangeRestingSpot: HTMLElement;
 	private readonly _visibleLines: VisibleLinesCollection<ViewLine>;
 	private readonly domNode: FastDomNode<HTMLElement>;
@@ -108,7 +107,6 @@ export class ViewLinesWebgl extends ViewPart implements IVisibleLinesHost<ViewLi
 	private _horizontalScrollbarHeight: number;
 	private _cursorSurroundingLines: number;
 	private _cursorSurroundingLinesStyle: 'default' | 'all';
-	private _canUseLayerHinting: boolean;
 	private _viewLineOptions: ViewLineOptions;
 
 	// --- width
@@ -125,7 +123,8 @@ export class ViewLinesWebgl extends ViewPart implements IVisibleLinesHost<ViewLi
 
 	constructor(context: ViewContext, linesContent: FastDomNode<HTMLElement>) {
 		super(context);
-		this._linesContent = linesContent;
+
+		linesContent.setContain('strict');
 		this._textRangeRestingSpot = document.createElement('div');
 		this._visibleLines = new VisibleLinesCollection(this);
 		this.domNode = this._visibleLines.domNode;
@@ -183,7 +182,6 @@ export class ViewLinesWebgl extends ViewPart implements IVisibleLinesHost<ViewLi
 		this._horizontalScrollbarHeight = layoutInfo.horizontalScrollbarHeight;
 		this._cursorSurroundingLines = options.get(EditorOption.cursorSurroundingLines);
 		this._cursorSurroundingLinesStyle = options.get(EditorOption.cursorSurroundingLinesStyle);
-		this._canUseLayerHinting = !options.get(EditorOption.disableLayerHinting);
 		this._viewLineOptions = new ViewLineOptions(conf, this._context.theme.type);
 
 		PartFingerprints.write(this.domNode, PartFingerprint.ViewLines);
@@ -638,10 +636,6 @@ export class ViewLinesWebgl extends ViewPart implements IVisibleLinesHost<ViewLi
 				}
 			}
 		}
-
-		// (3) handle scrolling
-		this._linesContent.setLayerHinting(this._canUseLayerHinting);
-		this._linesContent.setContain('strict');
 	}
 
 	// --- width
