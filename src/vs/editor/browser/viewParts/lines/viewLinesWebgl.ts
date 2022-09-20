@@ -21,6 +21,8 @@ import { Viewport } from 'vs/editor/common/viewModel';
 import { EditorOption } from 'vs/editor/common/config/editorOptions';
 import { MOUSE_CURSOR_TEXT_CSS_CLASS_NAME } from 'vs/base/browser/ui/mouseCursor/mouseCursor';
 import { WebglRenderer } from 'vs/editor/browser/viewParts/lines/webgl/WebglRenderer';
+import { editorBackground, editorForeground } from 'vs/platform/theme/common/colorRegistry';
+import { IColor } from 'vs/editor/browser/viewParts/lines/webgl/base/Types';
 
 class LastRenderedData {
 
@@ -103,8 +105,8 @@ export class ViewLinesWebgl extends ViewPart implements IVisibleLinesHost<ViewLi
 				}
 			},
 			{
-				foreground: { css: '#ffffff', rgba: 0xffffffff },
-				background: { css: '#1e1e1e', rgba: 0x1e1e1eff },
+				foreground: codeColorToXtermColor(context, editorForeground),
+				background: codeColorToXtermColor(context, editorBackground),
 				cursor: { css: '#ffffff', rgba: 0xffffffff },
 				cursorAccent: { css: '#ff0000', rgba: 0xff0000ff },
 				selectionForeground: undefined,
@@ -653,4 +655,27 @@ export class ViewLinesWebgl extends ViewPart implements IVisibleLinesHost<ViewLi
 
 		return viewportStart;
 	}
+}
+
+function codeColorToXtermColor(context: ViewContext, colorKey: string): IColor {
+	const color = context.theme.getColor(colorKey);
+	if (!color) {
+		return {
+			css: '#ff0000',
+			rgba: 0xff0000ff
+		};
+	}
+	return {
+		css: `#${formatChannel(color.rgba.r)}${formatChannel(color.rgba.g)}${formatChannel(color.rgba.b)}`,
+		rgba: (
+			(color.rgba.r & 0xFF) << 24 |
+			(color.rgba.g & 0xFF) << 16 |
+			(color.rgba.b & 0xFF) << 8 |
+			(0xFF)
+		)
+	};
+}
+
+function formatChannel(value: number): string {
+	return value.toString(16).padStart(2, '0');
 }
