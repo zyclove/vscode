@@ -54,8 +54,9 @@ interface IVertices {
 	count: number;
 }
 
-const INDICES_PER_LINE = 5;
-const BYTES_PER_LINE = INDICES_PER_LINE * Float32Array.BYTES_PER_ELEMENT;
+const INDICES_PER_ITEM = 5;
+const BYTES_PER_ITEM = INDICES_PER_ITEM * Float32Array.BYTES_PER_ELEMENT;
+const INITIAL_ITEM_CAPACITY = 0 * INDICES_PER_ITEM;
 
 export class RulerRenderer extends Disposable {
 
@@ -69,8 +70,8 @@ export class RulerRenderer extends Disposable {
 	private _typicalHalfwidthCharacterWidth!: number;
 
 	private _vertices: IVertices = {
-		count: 0,
-		attributes: new Float32Array(0)
+		count: INITIAL_ITEM_CAPACITY,
+		attributes: new Float32Array(INITIAL_ITEM_CAPACITY * INDICES_PER_ITEM)
 	};
 	private _bgFloat: Float32Array = new Float32Array([0, 0, 0, 0]);
 
@@ -81,11 +82,7 @@ export class RulerRenderer extends Disposable {
 	) {
 		super();
 
-
-
 		this._refreshRulers();
-
-
 
 		const gl = this._gl;
 
@@ -122,10 +119,10 @@ export class RulerRenderer extends Disposable {
 		this._register(toDisposable(() => gl.deleteBuffer(this._attributesBuffer)));
 		gl.bindBuffer(gl.ARRAY_BUFFER, this._attributesBuffer);
 		gl.enableVertexAttribArray(VertexAttribLocations.POSITION);
-		gl.vertexAttribPointer(VertexAttribLocations.POSITION, 1, gl.FLOAT, false, BYTES_PER_LINE, 0);
+		gl.vertexAttribPointer(VertexAttribLocations.POSITION, 1, gl.FLOAT, false, BYTES_PER_ITEM, 0);
 		gl.vertexAttribDivisor(VertexAttribLocations.POSITION, 1);
 		gl.enableVertexAttribArray(VertexAttribLocations.COLOR);
-		gl.vertexAttribPointer(VertexAttribLocations.COLOR, 4, gl.FLOAT, false, BYTES_PER_LINE, 1 * Float32Array.BYTES_PER_ELEMENT);
+		gl.vertexAttribPointer(VertexAttribLocations.COLOR, 4, gl.FLOAT, false, BYTES_PER_ITEM, 1 * Float32Array.BYTES_PER_ELEMENT);
 		gl.vertexAttribDivisor(VertexAttribLocations.COLOR, 1);
 
 		this._updateCachedColors();
@@ -144,18 +141,18 @@ export class RulerRenderer extends Disposable {
 		this._typicalHalfwidthCharacterWidth = options.get(EditorOption.fontInfo).typicalHalfwidthCharacterWidth;
 		if (this._rulers.length !== this._vertices.count) {
 			this._vertices.count = this._rulers.length;
-			this._vertices.attributes = new Float32Array(this._rulers.length * INDICES_PER_LINE);
+			this._vertices.attributes = new Float32Array(this._rulers.length * INDICES_PER_ITEM);
 		}
 	}
 
 	public update(): void {
 		for (let i = 0, len = this._rulers.length; i < len; i++) {
 			const ruler = this._rulers[i];
-			this._vertices.attributes[i * INDICES_PER_LINE] = (ruler.column * this._typicalHalfwidthCharacterWidth) / this._dimensions.canvasWidth;
-			this._vertices.attributes[i * INDICES_PER_LINE + 1] = this._bgFloat[0];
-			this._vertices.attributes[i * INDICES_PER_LINE + 2] = this._bgFloat[1];
-			this._vertices.attributes[i * INDICES_PER_LINE + 3] = this._bgFloat[2];
-			this._vertices.attributes[i * INDICES_PER_LINE + 4] = this._bgFloat[3];
+			this._vertices.attributes[i * INDICES_PER_ITEM] = (ruler.column * this._typicalHalfwidthCharacterWidth) / this._dimensions.canvasWidth;
+			this._vertices.attributes[i * INDICES_PER_ITEM + 1] = this._bgFloat[0];
+			this._vertices.attributes[i * INDICES_PER_ITEM + 2] = this._bgFloat[1];
+			this._vertices.attributes[i * INDICES_PER_ITEM + 3] = this._bgFloat[2];
+			this._vertices.attributes[i * INDICES_PER_ITEM + 4] = this._bgFloat[3];
 		}
 	}
 
