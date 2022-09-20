@@ -52,7 +52,7 @@ import { PointerHandlerLastRenderData } from 'vs/editor/browser/controller/mouse
 import { BlockDecorations } from 'vs/editor/browser/viewParts/blockDecorations/blockDecorations';
 import { ViewLinesWebgl } from 'vs/editor/browser/viewParts/lines/viewLinesWebgl';
 
-const disableOverlays = true;
+const disableOverlays = false;
 
 export interface IContentWidgetData {
 	widget: IContentWidget;
@@ -156,7 +156,7 @@ export class View extends ViewEventHandler {
 		let contentViewOverlays: ContentViewOverlays;
 		let margin: Margin;
 		if (!disableOverlays) {
-			const contentViewOverlays = new ContentViewOverlays(this._context);
+			contentViewOverlays = new ContentViewOverlays(this._context);
 			this._viewParts.push(contentViewOverlays);
 			contentViewOverlays.addDynamicOverlay(new CurrentLineHighlightOverlay(this._context));
 			contentViewOverlays.addDynamicOverlay(new SelectionsOverlay(this._context));
@@ -171,7 +171,7 @@ export class View extends ViewEventHandler {
 			marginViewOverlays.addDynamicOverlay(new LinesDecorationsOverlay(this._context));
 			marginViewOverlays.addDynamicOverlay(new LineNumbersOverlay(this._context));
 
-			const margin = new Margin(this._context);
+			margin = new Margin(this._context);
 			margin.getDomNode().appendChild(this._viewZones.marginDomNode);
 			margin.getDomNode().appendChild(marginViewOverlays.getDomNode());
 			this._viewParts.push(margin);

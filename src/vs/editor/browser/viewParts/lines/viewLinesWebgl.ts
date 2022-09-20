@@ -104,7 +104,7 @@ export class ViewLinesWebgl extends ViewPart implements IVisibleLinesHost<ViewLi
 			},
 			{
 				foreground: { css: '#ffffff', rgba: 0xffffffff },
-				background: { css: '#000000', rgba: 0x000000ff },
+				background: { css: '#1e1e1e', rgba: 0x1e1e1eff },
 				cursor: { css: '#ffffff', rgba: 0xffffffff },
 				cursorAccent: { css: '#ff0000', rgba: 0xff0000ff },
 				selectionForeground: undefined,
