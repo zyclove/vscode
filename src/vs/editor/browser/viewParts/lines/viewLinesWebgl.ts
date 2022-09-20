@@ -602,8 +602,8 @@ export class ViewLinesWebgl extends ViewPart implements IVisibleLinesHost<ViewLi
 		// (1) render lines - ensures lines are in the DOM
 		// this._visibleLines.renderLines(viewportData);
 		this._lastRenderedData.setCurrentVisibleRange(viewportData.visibleRange);
-		this.domNode.setWidth(this._context.viewLayout.getScrollWidth());
-		this.domNode.setHeight(Math.min(this._context.viewLayout.getScrollHeight(), 1000000));
+		// this.domNode.setWidth(this._context.viewLayout.getScrollWidth());
+		// this.domNode.setHeight(Math.min(this._context.viewLayout.getScrollHeight(), 1000000));
 
 		// (2) compute horizontal scroll position:
 		//  - this must happen after the lines are in the DOM since it might need a line that rendered just now
