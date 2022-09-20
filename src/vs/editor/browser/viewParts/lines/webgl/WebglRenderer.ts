@@ -28,6 +28,8 @@ import * as viewEvents from 'vs/editor/common/viewEvents';
 import { ViewContext } from 'vs/editor/common/viewModel/viewContext';
 import { TokenizationRegistry } from 'vs/editor/common/languages';
 import { AttributeData } from 'vs/editor/browser/viewParts/lines/webgl/base/AttributeData';
+import { ITokenPresentation } from 'vs/editor/common/encodedTokenAttributes';
+import { Color } from 'vs/base/common/color';
 
 /** Work variables to avoid garbage collection. */
 // const w: { fg: number; bg: number; hasFg: boolean; hasBg: boolean; isSelected: boolean } = {
@@ -370,15 +372,17 @@ export class WebglRenderer extends Disposable {
 	}
 
 	private _updateModel(start: number, end: number, viewportData: ViewportData): void {
-		// console.log('WebglRenderer.updateModel', { start, end });
 		let i, x, y: number;
-		let row: number;
-
+		let chars: string;
+		let row, code, tokenId, fg, bg: number;
+		let presentation: ITokenPresentation;
+		let colorMap: Color[];
+		let tokenColor: Color;
 		let lineRenderingData: ViewLineRenderingData;
+
 		const ydisp = start;
 		end -= start;
 		start = 0;
-		// TODO: GC optimizations
 		for (y = start; y <= end - start; y++) {
 			row = y + ydisp;
 			// Convert 0- to 1-based
@@ -387,18 +391,18 @@ export class WebglRenderer extends Disposable {
 			this._model.lineLengths[y] = 0;
 			// TODO: Use lineRenderingData.maxColumn
 			for (x = 0; x < this._viewportDims.cols; x++) {
-				const chars = lineRenderingData.content[x];
+				chars = lineRenderingData.content[x];
 				if (chars === undefined) {
 					continue;
 				}
 
-				const tokenId = lineRenderingData.tokens.findTokenIndexAtOffset(x);
-				const presentation = lineRenderingData.tokens.getPresentation(tokenId);
-				const colorMap = TokenizationRegistry.getColorMap() ?? [];
-				const tokenColor = colorMap[presentation.foreground];
+				tokenId = lineRenderingData.tokens.findTokenIndexAtOffset(x);
+				presentation = lineRenderingData.tokens.getPresentation(tokenId);
+				colorMap = TokenizationRegistry.getColorMap() ?? [];
+				tokenColor = colorMap[presentation.foreground];
 
-				let fg = tokenColor ? Attributes.CM_RGB | AttributeData.fromColorRGB([tokenColor.rgba.r, tokenColor.rgba.g, tokenColor.rgba.b]) : 0;
-				let bg = 0;
+				fg = tokenColor ? Attributes.CM_RGB | AttributeData.fromColorRGB([tokenColor.rgba.r, tokenColor.rgba.g, tokenColor.rgba.b]) : 0;
+				bg = 0;
 
 				if (presentation.bold) {
 					fg |= FgFlags.BOLD;
@@ -407,7 +411,7 @@ export class WebglRenderer extends Disposable {
 					bg |= BgFlags.ITALIC;
 				}
 
-				const code = chars.charCodeAt(0);
+				code = chars.charCodeAt(0);
 				if (code !== NULL_CELL_CODE) {
 					this._model.lineLengths[y] = x + 1;
 				}
