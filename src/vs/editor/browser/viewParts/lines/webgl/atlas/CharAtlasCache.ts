@@ -70,10 +70,8 @@ export function acquireCharAtlas(
 			return entry.atlas;
 		}
 	}
-
-	// const core: ITerminal = (terminal as any)._core;
 	const newEntry: ICharAtlasCacheEntry = {
-		atlas: new WebglCharAtlas(document, newConfig/*, core.unicodeService*/),
+		atlas: new WebglCharAtlas(document, newConfig),
 		config: newConfig,
 		ownedBy: [owner]
 	};
