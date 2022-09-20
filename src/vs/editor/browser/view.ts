@@ -52,7 +52,7 @@ import { PointerHandlerLastRenderData } from 'vs/editor/browser/controller/mouse
 import { BlockDecorations } from 'vs/editor/browser/viewParts/blockDecorations/blockDecorations';
 import { ViewLinesWebgl } from 'vs/editor/browser/viewParts/lines/viewLinesWebgl';
 
-const disableOverlays = true;
+const disableOverlays = false;
 
 export interface IContentWidgetData {
 	widget: IContentWidget;
