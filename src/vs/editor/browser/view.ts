@@ -52,6 +52,7 @@ import { PointerHandlerLastRenderData } from 'vs/editor/browser/controller/mouse
 import { BlockDecorations } from 'vs/editor/browser/viewParts/blockDecorations/blockDecorations';
 import { ViewLinesWebgl } from 'vs/editor/browser/viewParts/lines/viewLinesWebgl';
 
+const disableOverlays = true;
 
 export interface IContentWidgetData {
 	widget: IContentWidget;
@@ -152,25 +153,29 @@ export class View extends ViewEventHandler {
 		const scrollDecoration = new ScrollDecorationViewPart(this._context);
 		this._viewParts.push(scrollDecoration);
 
-		const contentViewOverlays = new ContentViewOverlays(this._context);
-		this._viewParts.push(contentViewOverlays);
-		contentViewOverlays.addDynamicOverlay(new CurrentLineHighlightOverlay(this._context));
-		contentViewOverlays.addDynamicOverlay(new SelectionsOverlay(this._context));
-		contentViewOverlays.addDynamicOverlay(new IndentGuidesOverlay(this._context));
-		contentViewOverlays.addDynamicOverlay(new DecorationsOverlay(this._context));
+		let contentViewOverlays: ContentViewOverlays;
+		let margin: Margin;
+		if (!disableOverlays) {
+			const contentViewOverlays = new ContentViewOverlays(this._context);
+			this._viewParts.push(contentViewOverlays);
+			contentViewOverlays.addDynamicOverlay(new CurrentLineHighlightOverlay(this._context));
+			contentViewOverlays.addDynamicOverlay(new SelectionsOverlay(this._context));
+			contentViewOverlays.addDynamicOverlay(new IndentGuidesOverlay(this._context));
+			contentViewOverlays.addDynamicOverlay(new DecorationsOverlay(this._context));
 
-		const marginViewOverlays = new MarginViewOverlays(this._context);
-		this._viewParts.push(marginViewOverlays);
-		marginViewOverlays.addDynamicOverlay(new CurrentLineMarginHighlightOverlay(this._context));
-		marginViewOverlays.addDynamicOverlay(new GlyphMarginOverlay(this._context));
-		marginViewOverlays.addDynamicOverlay(new MarginViewLineDecorationsOverlay(this._context));
-		marginViewOverlays.addDynamicOverlay(new LinesDecorationsOverlay(this._context));
-		marginViewOverlays.addDynamicOverlay(new LineNumbersOverlay(this._context));
+			const marginViewOverlays = new MarginViewOverlays(this._context);
+			this._viewParts.push(marginViewOverlays);
+			marginViewOverlays.addDynamicOverlay(new CurrentLineMarginHighlightOverlay(this._context));
+			marginViewOverlays.addDynamicOverlay(new GlyphMarginOverlay(this._context));
+			marginViewOverlays.addDynamicOverlay(new MarginViewLineDecorationsOverlay(this._context));
+			marginViewOverlays.addDynamicOverlay(new LinesDecorationsOverlay(this._context));
+			marginViewOverlays.addDynamicOverlay(new LineNumbersOverlay(this._context));
 
-		const margin = new Margin(this._context);
-		margin.getDomNode().appendChild(this._viewZones.marginDomNode);
-		margin.getDomNode().appendChild(marginViewOverlays.getDomNode());
-		this._viewParts.push(margin);
+			const margin = new Margin(this._context);
+			margin.getDomNode().appendChild(this._viewZones.marginDomNode);
+			margin.getDomNode().appendChild(marginViewOverlays.getDomNode());
+			this._viewParts.push(margin);
+		}
 
 		// Content widgets
 		this._contentWidgets = new ViewContentWidgets(this._context, this.domNode);
@@ -199,14 +204,18 @@ export class View extends ViewEventHandler {
 			overviewRulerData.parent.insertBefore(decorationsOverviewRuler.getDomNode(), overviewRulerData.insertBefore);
 		}
 
-		this._linesContent.appendChild(contentViewOverlays.getDomNode());
+		if (!disableOverlays) {
+			this._linesContent.appendChild(contentViewOverlays!.getDomNode());
+		}
 		this._linesContent.appendChild(rulers.domNode);
 		this._linesContent.appendChild(blockOutline.domNode);
 		this._linesContent.appendChild(this._viewZones.domNode);
 		this._linesContent.appendChild(this._viewLines.getDomNode());
 		this._linesContent.appendChild(this._contentWidgets.domNode);
 		this._linesContent.appendChild(this._viewCursors.getDomNode());
-		this._overflowGuardContainer.appendChild(margin.getDomNode());
+		if (!disableOverlays) {
+			this._overflowGuardContainer.appendChild(margin!.getDomNode());
+		}
 		this._overflowGuardContainer.appendChild(this._scrollbar.getDomNode());
 		this._overflowGuardContainer.appendChild(scrollDecoration.getDomNode());
 		this._overflowGuardContainer.appendChild(this._textAreaHandler.textArea);
