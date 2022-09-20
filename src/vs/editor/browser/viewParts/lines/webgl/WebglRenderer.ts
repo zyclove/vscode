@@ -108,7 +108,7 @@ export class WebglRenderer extends Disposable {
 
 		const options = this._context.configuration.options;
 		const layoutInfo = options.get(EditorOption.layoutInfo);
-		this._updateDimensions2(layoutInfo);
+		this._updateDimensions(layoutInfo);
 
 		this._canvas = document.createElement('canvas');
 
@@ -201,7 +201,7 @@ export class WebglRenderer extends Disposable {
 		const layoutInfo = options.get(EditorOption.layoutInfo);
 
 		// Update character and canvas dimensions
-		this._updateDimensions2(layoutInfo);
+		this._updateDimensions(layoutInfo);
 
 		this._model.resize(this._viewportDims.cols, this._viewportDims.rows);
 
@@ -233,7 +233,7 @@ export class WebglRenderer extends Disposable {
 	}
 
 	public onCharSizeChanged(): void {
-		this.onResize(this._viewportDims.cols, this._viewportDims.rows);
+		this.onResize();
 	}
 
 	public onBlur(): void {
@@ -346,7 +346,7 @@ export class WebglRenderer extends Disposable {
 				const options = this._context.configuration.options;
 				const fontInfo = options.get(EditorOption.fontInfo);
 				const layoutInfo = options.get(EditorOption.layoutInfo);
-				this._updateDimensions2(layoutInfo);
+				this._updateDimensions(layoutInfo);
 				this._refreshCharAtlas(fontInfo);
 				this._isAttached = true;
 			} else {
@@ -682,65 +682,7 @@ export class WebglRenderer extends Disposable {
 		// this._model.selection.endCol = end[0];
 	}
 
-	/**
-	 * Recalculates the character and canvas dimensions.
-	 * @deprecated Move to _updateDimensions2
-	 */
-	private _updateDimensions(): void {
-		// TODO: Acquire CharSizeService properly
-
-		// Perform a new measure if the CharMeasure dimensions are not yet available
-		if (!this._charSize.width || !this._charSize.height) {
-			return;
-		}
-
-		// Calculate the scaled character width. Width is floored as it must be drawn to an integer grid
-		// in order for the char atlas glyphs to not be blurry.
-		this.dimensions.scaledCharWidth = Math.floor(this._charSize.width * this._devicePixelRatio);
-
-		// Calculate the scaled character height. Height is ceiled in case devicePixelRatio is a
-		// floating point number in order to ensure there is enough space to draw the character to the
-		// cell.
-		this.dimensions.scaledCharHeight = Math.ceil(this._charSize.height * this._devicePixelRatio);
-
-		// Calculate the scaled cell height, if lineHeight is _not_ 1, the resulting value will be
-		// floored since lineHeight can never be lower then 1, this guarentees the scaled cell height
-		// will always be larger than scaled char height.
-		this.dimensions.scaledCellHeight = Math.floor(this.dimensions.scaledCharHeight * this._viewportDims.options.lineHeight);
-
-		// Calculate the y offset within a cell that glyph should draw at in order for it to be centered
-		// correctly within the cell.
-		this.dimensions.scaledCharTop = this._viewportDims.options.lineHeight === 1 ? 0 : Math.round((this.dimensions.scaledCellHeight - this.dimensions.scaledCharHeight) / 2);
-
-		// Calculate the scaled cell width, taking the letterSpacing into account.
-		this.dimensions.scaledCellWidth = this.dimensions.scaledCharWidth + Math.round(this._viewportDims.options.letterSpacing);
-
-		// Calculate the x offset with a cell that text should draw from in order for it to be centered
-		// correctly within the cell.
-		this.dimensions.scaledCharLeft = Math.floor(this._viewportDims.options.letterSpacing / 2);
-
-		// Recalculate the canvas dimensions, the scaled dimensions define the actual number of pixel in
-		// the canvas
-		this.dimensions.scaledCanvasHeight = this._viewportDims.rows * this.dimensions.scaledCellHeight;
-		this.dimensions.scaledCanvasWidth = this._viewportDims.cols * this.dimensions.scaledCellWidth;
-
-		// The the size of the canvas on the page. It's important that this rounds to nearest integer
-		// and not ceils as browsers often have floating point precision issues where
-		// `window.devicePixelRatio` ends up being something like `1.100000023841858` for example, when
-		// it's actually 1.1. Ceiling may causes blurriness as the backing canvas image is 1 pixel too
-		// large for the canvas element size.
-		this.dimensions.canvasHeight = Math.round(this.dimensions.scaledCanvasHeight / this._devicePixelRatio);
-		this.dimensions.canvasWidth = Math.round(this.dimensions.scaledCanvasWidth / this._devicePixelRatio);
-
-		// Get the CSS dimensions of an individual cell. This needs to be derived from the calculated
-		// device pixel canvas value above. CharMeasure.width/height by itself is insufficient when the
-		// page is not at 100% zoom level as CharMeasure is measured in CSS pixels, but the actual char
-		// size on the canvas can differ.
-		this.dimensions.actualCellHeight = this.dimensions.scaledCellHeight / this._devicePixelRatio;
-		this.dimensions.actualCellWidth = this.dimensions.scaledCellWidth / this._devicePixelRatio;
-	}
-
-	private _updateDimensions2(layoutInfo: EditorLayoutInfo) {
+	private _updateDimensions(layoutInfo: EditorLayoutInfo) {
 		// Perform a new measure if the CharMeasure dimensions are not yet available
 		if (!this._charSize.width || !this._charSize.height) {
 			return;
@@ -823,7 +765,7 @@ export class WebglRenderer extends Disposable {
 		for (const l of this._renderLayers) {
 			l.onOptionsChanged(/*this._terminal*/);
 		}
-		this._updateDimensions2(layoutInfo);
+		this._updateDimensions(layoutInfo);
 		this._refreshCharAtlas(fontInfo);
 		return true;
 	}
