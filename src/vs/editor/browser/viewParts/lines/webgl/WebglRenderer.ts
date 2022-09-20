@@ -370,10 +370,10 @@ export class WebglRenderer extends Disposable {
 		let chars: string;
 		let row, code, tokenId, fg, bg: number;
 		let presentation: ITokenPresentation;
-		let colorMap: Color[];
 		let tokenColor: Color;
 		let lineRenderingData: ViewLineRenderingData;
 
+		const colorMap = TokenizationRegistry.getColorMap() ?? [];
 		const ydisp = start;
 		end -= start;
 		start = 0;
@@ -381,9 +381,7 @@ export class WebglRenderer extends Disposable {
 			row = y + ydisp;
 			// Convert 0- to 1-based
 			lineRenderingData = viewportData.getViewLineRenderingData(row + 1);
-			// console.log('  lineRenderingData', lineRenderingData);
 			this._model.lineLengths[y] = 0;
-			// TODO: Use lineRenderingData.maxColumn
 			for (x = 0; x < lineRenderingData.maxColumn; x++) {
 				chars = lineRenderingData.content[x];
 				if (chars === undefined) {
@@ -392,7 +390,6 @@ export class WebglRenderer extends Disposable {
 
 				tokenId = lineRenderingData.tokens.findTokenIndexAtOffset(x);
 				presentation = lineRenderingData.tokens.getPresentation(tokenId);
-				colorMap = TokenizationRegistry.getColorMap() ?? [];
 				tokenColor = colorMap[presentation.foreground];
 
 				fg = tokenColor ? Attributes.CM_RGB | AttributeData.fromColorRGB([tokenColor.rgba.r, tokenColor.rgba.g, tokenColor.rgba.b]) : 0;
