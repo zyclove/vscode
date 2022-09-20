@@ -332,14 +332,6 @@ export class WebglRenderer extends Disposable {
 		}
 	}
 
-	public registerCharacterJoiner(handler: (text: string) => [number, number][]): number {
-		return -1;
-	}
-
-	public deregisterCharacterJoiner(joinerId: number): boolean {
-		return false;
-	}
-
 	public renderRows(start: number, end: number, viewportData: ViewportData): void {
 		if (!this._isAttached) {
 			if (window.document.body.contains(this._screenElement) && this._charSize.width && this._charSize.height) {
@@ -392,7 +384,7 @@ export class WebglRenderer extends Disposable {
 			// console.log('  lineRenderingData', lineRenderingData);
 			this._model.lineLengths[y] = 0;
 			// TODO: Use lineRenderingData.maxColumn
-			for (x = 0; x < this._viewportDims.cols; x++) {
+			for (x = 0; x < lineRenderingData.maxColumn; x++) {
 				chars = lineRenderingData.content[x];
 				if (chars === undefined) {
 					continue;
@@ -425,6 +417,7 @@ export class WebglRenderer extends Disposable {
 				this._glyphRenderer.updateCell(x, y, code, bg, fg, 0, chars, 0);
 			}
 		}
+		// this._rectangleRenderer.updateBackgrounds(this._model);
 		// TODO: Update the model for monaco
 
 		// const terminal = this._core;
