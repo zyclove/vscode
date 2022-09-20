@@ -3,7 +3,6 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as platform from 'vs/base/common/platform';
 import { createFastDomNode, FastDomNode } from 'vs/base/browser/fastDomNode';
 import { RunOnceScheduler } from 'vs/base/common/async';
 import { applyFontInfo } from 'vs/editor/browser/config/domFontInfo';
@@ -20,7 +19,6 @@ import * as viewEvents from 'vs/editor/common/viewEvents';
 import { ViewportData } from 'vs/editor/common/viewLayout/viewLinesViewportData';
 import { Viewport } from 'vs/editor/common/viewModel';
 import { EditorOption } from 'vs/editor/common/config/editorOptions';
-import { Constants } from 'vs/base/common/uint';
 import { MOUSE_CURSOR_TEXT_CSS_CLASS_NAME } from 'vs/base/browser/ui/mouseCursor/mouseCursor';
 import { WebglRenderer } from 'vs/editor/browser/viewParts/lines/webgl/WebglRenderer';
 
@@ -41,56 +39,7 @@ class LastRenderedData {
 	}
 }
 
-class HorizontalRevealRangeRequest {
-	public readonly type = 'range';
-	public readonly minLineNumber: number;
-	public readonly maxLineNumber: number;
-
-	constructor(
-		public readonly minimalReveal: boolean,
-		public readonly lineNumber: number,
-		public readonly startColumn: number,
-		public readonly endColumn: number,
-		public readonly startScrollTop: number,
-		public readonly stopScrollTop: number,
-		public readonly scrollType: ScrollType
-	) {
-		this.minLineNumber = lineNumber;
-		this.maxLineNumber = lineNumber;
-	}
-}
-
-class HorizontalRevealSelectionsRequest {
-	public readonly type = 'selections';
-	public readonly minLineNumber: number;
-	public readonly maxLineNumber: number;
-
-	constructor(
-		public readonly minimalReveal: boolean,
-		public readonly selections: Selection[],
-		public readonly startScrollTop: number,
-		public readonly stopScrollTop: number,
-		public readonly scrollType: ScrollType
-	) {
-		let minLineNumber = selections[0].startLineNumber;
-		let maxLineNumber = selections[0].endLineNumber;
-		for (let i = 1, len = selections.length; i < len; i++) {
-			const selection = selections[i];
-			minLineNumber = Math.min(minLineNumber, selection.startLineNumber);
-			maxLineNumber = Math.max(maxLineNumber, selection.endLineNumber);
-		}
-		this.minLineNumber = minLineNumber;
-		this.maxLineNumber = maxLineNumber;
-	}
-}
-
-type HorizontalRevealRequest = HorizontalRevealRangeRequest | HorizontalRevealSelectionsRequest;
-
 export class ViewLinesWebgl extends ViewPart implements IVisibleLinesHost<ViewLine>, IViewLines {
-	/**
-	 * Adds this amount of pixels to the right of lines (no-one wants to type near the edge of the viewport)
-	 */
-	private static readonly HORIZONTAL_EXTRA_PX = 30;
 
 	private readonly _textRangeRestingSpot: HTMLElement;
 	private readonly _visibleLines: VisibleLinesCollection<ViewLine>;
@@ -102,8 +51,6 @@ export class ViewLinesWebgl extends ViewPart implements IVisibleLinesHost<ViewLi
 	// --- config
 	private _lineHeight: number;
 	private _typicalHalfwidthCharacterWidth: number;
-	private _isViewportWrapping: boolean;
-	private _revealHorizontalRightPadding: number;
 	private _horizontalScrollbarHeight: number;
 	private _cursorSurroundingLines: number;
 	private _cursorSurroundingLinesStyle: 'default' | 'all';
@@ -114,7 +61,6 @@ export class ViewLinesWebgl extends ViewPart implements IVisibleLinesHost<ViewLi
 	private readonly _asyncUpdateLineWidths: RunOnceScheduler;
 	private readonly _asyncCheckMonospaceFontAssumptions: RunOnceScheduler;
 
-	private _horizontalRevealRequest: HorizontalRevealRequest | null;
 	private readonly _lastRenderedData: LastRenderedData;
 
 	// Sticky Scroll
@@ -143,7 +89,6 @@ export class ViewLinesWebgl extends ViewPart implements IVisibleLinesHost<ViewLi
 		const conf = this._context.configuration;
 		const options = this._context.configuration.options;
 		const fontInfo = options.get(EditorOption.fontInfo);
-		const wrappingInfo = options.get(EditorOption.wrappingInfo);
 		const layoutInfo = options.get(EditorOption.layoutInfo);
 
 
@@ -178,8 +123,6 @@ export class ViewLinesWebgl extends ViewPart implements IVisibleLinesHost<ViewLi
 
 		this._lineHeight = options.get(EditorOption.lineHeight);
 		this._typicalHalfwidthCharacterWidth = fontInfo.typicalHalfwidthCharacterWidth;
-		this._isViewportWrapping = wrappingInfo.isViewportWrapping;
-		this._revealHorizontalRightPadding = options.get(EditorOption.revealHorizontalRightPadding);
 		this._horizontalScrollbarHeight = layoutInfo.horizontalScrollbarHeight;
 		this._cursorSurroundingLines = options.get(EditorOption.cursorSurroundingLines);
 		this._cursorSurroundingLinesStyle = options.get(EditorOption.cursorSurroundingLinesStyle);
@@ -199,8 +142,6 @@ export class ViewLinesWebgl extends ViewPart implements IVisibleLinesHost<ViewLi
 		}, 2000);
 
 		this._lastRenderedData = new LastRenderedData();
-
-		this._horizontalRevealRequest = null;
 
 		// sticky scroll widget
 		this._stickyScrollEnabled = options.get(EditorOption.stickyScroll).enabled;
@@ -304,12 +245,12 @@ export class ViewLinesWebgl extends ViewPart implements IVisibleLinesHost<ViewLi
 				};
 			} else if (e.range) {
 				// We don't necessarily know the horizontal offset of this range since the line might not be in the view...
-				this._horizontalRevealRequest = new HorizontalRevealRangeRequest(e.minimalReveal, e.range.startLineNumber, e.range.startColumn, e.range.endColumn, this._context.viewLayout.getCurrentScrollTop(), newScrollPosition.scrollTop, e.scrollType);
+				// this._horizontalRevealRequest = new HorizontalRevealRangeRequest(e.minimalReveal, e.range.startLineNumber, e.range.startColumn, e.range.endColumn, this._context.viewLayout.getCurrentScrollTop(), newScrollPosition.scrollTop, e.scrollType);
 			} else if (e.selections && e.selections.length > 0) {
-				this._horizontalRevealRequest = new HorizontalRevealSelectionsRequest(e.minimalReveal, e.selections, this._context.viewLayout.getCurrentScrollTop(), newScrollPosition.scrollTop, e.scrollType);
+				// this._horizontalRevealRequest = new HorizontalRevealSelectionsRequest(e.minimalReveal, e.selections, this._context.viewLayout.getCurrentScrollTop(), newScrollPosition.scrollTop, e.scrollType);
 			}
 		} else {
-			this._horizontalRevealRequest = null;
+			// this._horizontalRevealRequest = null;
 		}
 
 		const scrollTopDelta = Math.abs(this._context.viewLayout.getCurrentScrollTop() - newScrollPosition.scrollTop);
@@ -496,15 +437,6 @@ export class ViewLinesWebgl extends ViewPart implements IVisibleLinesHost<ViewLi
 		this._updateLineWidths(false);
 	}
 
-	/**
-	 * Updates the max line width if it is fast to compute.
-	 * Returns true if all lines were taken into account.
-	 * Returns false if some lines need to be reevaluated (in a slow fashion).
-	 */
-	private _updateLineWidthsFast(): boolean {
-		return this._updateLineWidths(true);
-	}
-
 	private _updateLineWidthsSlow(): void {
 		this._updateLineWidths(false);
 	}
@@ -579,64 +511,8 @@ export class ViewLinesWebgl extends ViewPart implements IVisibleLinesHost<ViewLi
 	public renderText(viewportData: ViewportData): void {
 		// TODO: Update model in other methods, do actual render call here?
 
-		// console.log('ViewLinesWebgl#renderText', viewportData);
 		// Convert from 1- to 0-based
 		this._webglRenderer.renderRows(viewportData.startLineNumber - 1, viewportData.endLineNumber - 1, viewportData);
-
-		// (1) render lines - ensures lines are in the DOM
-		// this._visibleLines.renderLines(viewportData);
-		this._lastRenderedData.setCurrentVisibleRange(viewportData.visibleRange);
-		// this.domNode.setWidth(this._context.viewLayout.getScrollWidth());
-		// this.domNode.setHeight(Math.min(this._context.viewLayout.getScrollHeight(), 1000000));
-
-		// (2) compute horizontal scroll position:
-		//  - this must happen after the lines are in the DOM since it might need a line that rendered just now
-		//  - it might change `scrollWidth` and `scrollLeft`
-		if (this._horizontalRevealRequest) {
-
-			const horizontalRevealRequest = this._horizontalRevealRequest;
-
-			// Check that we have the line that contains the horizontal range in the viewport
-			if (viewportData.startLineNumber <= horizontalRevealRequest.minLineNumber && horizontalRevealRequest.maxLineNumber <= viewportData.endLineNumber) {
-
-				this._horizontalRevealRequest = null;
-
-				// allow `visibleRangesForRange2` to work
-				this.onDidRender();
-
-				// compute new scroll position
-				const newScrollLeft = this._computeScrollLeftToReveal(horizontalRevealRequest);
-
-				if (newScrollLeft) {
-					if (!this._isViewportWrapping) {
-						// ensure `scrollWidth` is large enough
-						this._ensureMaxLineWidth(newScrollLeft.maxHorizontalOffset);
-					}
-					// set `scrollLeft`
-					this._context.viewModel.viewLayout.setScrollPosition({
-						scrollLeft: newScrollLeft.scrollLeft
-					}, horizontalRevealRequest.scrollType);
-				}
-			}
-		}
-
-		// Update max line width (not so important, it is just so the horizontal scrollbar doesn't get too small)
-		if (!this._updateLineWidthsFast()) {
-			// Computing the width of some lines would be slow => delay it
-			this._asyncUpdateLineWidths.schedule();
-		}
-
-		if (platform.isLinux && !this._asyncCheckMonospaceFontAssumptions.isScheduled()) {
-			const rendStartLineNumber = this._visibleLines.getStartLineNumber();
-			const rendEndLineNumber = this._visibleLines.getEndLineNumber();
-			for (let lineNumber = rendStartLineNumber; lineNumber <= rendEndLineNumber; lineNumber++) {
-				const visibleLine = this._visibleLines.getVisibleLine(lineNumber);
-				if (visibleLine.needsMonospaceFontCheck()) {
-					this._asyncCheckMonospaceFontAssumptions.schedule();
-					break;
-				}
-			}
-		}
 	}
 
 	// --- width
@@ -738,56 +614,6 @@ export class ViewLinesWebgl extends ViewPart implements IVisibleLinesHost<ViewLi
 		}
 
 		return newScrollTop;
-	}
-
-	private _computeScrollLeftToReveal(horizontalRevealRequest: HorizontalRevealRequest): { scrollLeft: number; maxHorizontalOffset: number } | null {
-
-		const viewport = this._context.viewLayout.getCurrentViewport();
-		const layoutInfo = this._context.configuration.options.get(EditorOption.layoutInfo);
-		const viewportStartX = viewport.left;
-		const viewportEndX = viewportStartX + viewport.width - layoutInfo.verticalScrollbarWidth;
-
-		let boxStartX = Constants.MAX_SAFE_SMALL_INTEGER;
-		let boxEndX = 0;
-		if (horizontalRevealRequest.type === 'range') {
-			const visibleRanges = this._visibleRangesForLineRange(horizontalRevealRequest.lineNumber, horizontalRevealRequest.startColumn, horizontalRevealRequest.endColumn);
-			if (!visibleRanges) {
-				return null;
-			}
-			for (const visibleRange of visibleRanges.ranges) {
-				boxStartX = Math.min(boxStartX, Math.round(visibleRange.left));
-				boxEndX = Math.max(boxEndX, Math.round(visibleRange.left + visibleRange.width));
-			}
-		} else {
-			for (const selection of horizontalRevealRequest.selections) {
-				if (selection.startLineNumber !== selection.endLineNumber) {
-					return null;
-				}
-				const visibleRanges = this._visibleRangesForLineRange(selection.startLineNumber, selection.startColumn, selection.endColumn);
-				if (!visibleRanges) {
-					return null;
-				}
-				for (const visibleRange of visibleRanges.ranges) {
-					boxStartX = Math.min(boxStartX, Math.round(visibleRange.left));
-					boxEndX = Math.max(boxEndX, Math.round(visibleRange.left + visibleRange.width));
-				}
-			}
-		}
-
-		if (!horizontalRevealRequest.minimalReveal) {
-			boxStartX = Math.max(0, boxStartX - ViewLinesWebgl.HORIZONTAL_EXTRA_PX);
-			boxEndX += this._revealHorizontalRightPadding;
-		}
-
-		if (horizontalRevealRequest.type === 'selections' && boxEndX - boxStartX > viewport.width) {
-			return null;
-		}
-
-		const newScrollLeft = this._computeMinimumScrolling(viewportStartX, viewportEndX, boxStartX, boxEndX);
-		return {
-			scrollLeft: newScrollLeft,
-			maxHorizontalOffset: boxEndX
-		};
 	}
 
 	private _computeMinimumScrolling(viewportStart: number, viewportEnd: number, boxStart: number, boxEnd: number, revealAtStart?: boolean, revealAtEnd?: boolean): number {
