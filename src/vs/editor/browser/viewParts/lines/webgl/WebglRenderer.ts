@@ -19,7 +19,7 @@ import { Disposable } from 'vs/base/common/lifecycle';
 import { observeDevicePixelDimensions } from 'vs/editor/browser/viewParts/lines/webgl/base/DevicePixelObserver';
 import { IColorSet, IRenderDimensions, IRequestRedrawEvent } from 'vs/editor/browser/viewParts/lines/webgl/base/Types';
 import { Emitter } from 'vs/base/common/event';
-import { NULL_CELL_CODE, Attributes } from 'vs/editor/browser/viewParts/lines/webgl/base/Constants';
+import { NULL_CELL_CODE, Attributes, FgFlags, BgFlags } from 'vs/editor/browser/viewParts/lines/webgl/base/Constants';
 import { ViewportData } from 'vs/editor/common/viewLayout/viewLinesViewportData';
 import { ViewLineRenderingData } from 'vs/editor/common/viewModel';
 import { FontInfo } from 'vs/editor/common/config/fontInfo';
@@ -378,6 +378,7 @@ export class WebglRenderer extends Disposable {
 		const ydisp = start;
 		end -= start;
 		start = 0;
+		// TODO: GC optimizations
 		for (y = start; y <= end - start; y++) {
 			row = y + ydisp;
 			// Convert 0- to 1-based
@@ -395,9 +396,16 @@ export class WebglRenderer extends Disposable {
 				const presentation = lineRenderingData.tokens.getPresentation(tokenId);
 				const colorMap = TokenizationRegistry.getColorMap() ?? [];
 				const tokenColor = colorMap[presentation.foreground];
-				const fg = tokenColor ? Attributes.CM_RGB | AttributeData.fromColorRGB([tokenColor.rgba.r, tokenColor.rgba.g, tokenColor.rgba.b]) : 0;
-				// bold presentation.bold
-				// italic presentation.italic
+
+				let fg = tokenColor ? Attributes.CM_RGB | AttributeData.fromColorRGB([tokenColor.rgba.r, tokenColor.rgba.g, tokenColor.rgba.b]) : 0;
+				let bg = 0;
+
+				if (presentation.bold) {
+					fg |= FgFlags.BOLD;
+				}
+				if (presentation.italic) {
+					bg |= BgFlags.ITALIC;
+				}
 
 				const code = chars.charCodeAt(0);
 				if (code !== NULL_CELL_CODE) {
@@ -405,10 +413,10 @@ export class WebglRenderer extends Disposable {
 				}
 				i = ((y * this._viewportDims.cols) + x) * RENDER_MODEL_INDICIES_PER_CELL;
 				this._model.cells[i] = code;
-				this._model.cells[i + RENDER_MODEL_BG_OFFSET] = 0; //this._workColors.bg;
+				this._model.cells[i + RENDER_MODEL_BG_OFFSET] = bg; //this._workColors.bg;
 				this._model.cells[i + RENDER_MODEL_FG_OFFSET] = fg;
 				this._model.cells[i + RENDER_MODEL_EXT_OFFSET] = 0; //this._workColors.ext;
-				this._glyphRenderer.updateCell(x, y, code, 0, fg, 0, chars, 0);
+				this._glyphRenderer.updateCell(x, y, code, bg, fg, 0, chars, 0);
 			}
 		}
 		// TODO: Update the model for monaco
