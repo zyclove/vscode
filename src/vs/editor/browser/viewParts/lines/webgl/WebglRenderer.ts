@@ -417,6 +417,12 @@ export class WebglRenderer extends Disposable {
 				this._glyphRenderer.updateCell(x, y, code, bg, fg, 0, chars, 0);
 			}
 		}
+
+		// Clear remaining line lengths to support overscroll properly
+		for (; y < this._model.lineLengths.length; y++) {
+			this._model.lineLengths[y] = 0;
+		}
+
 		// this._rectangleRenderer.updateBackgrounds(this._model);
 		// TODO: Update the model for monaco
 
