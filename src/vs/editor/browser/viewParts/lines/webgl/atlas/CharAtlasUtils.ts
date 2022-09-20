@@ -21,7 +21,6 @@ export function generateConfig(
 	scaledCellHeight: number,
 	scaledCharWidth: number,
 	scaledCharHeight: number,
-	//terminal: Terminal,
 	colors: IColorSet,
 	devicePixelRatio: number,
 	lineHeight: number,
@@ -43,10 +42,11 @@ export function generateConfig(
 		ansi: colors.ansi.slice()
 	};
 	return {
-		customGlyphs: false, //terminal.options.customGlyphs,
+		customGlyphs: false,
 		devicePixelRatio,
-		letterSpacing: 0, //terminal.options.letterSpacing,
-		lineHeight, //terminal.options.lineHeight,
+		// TODO: Support letter spacing
+		letterSpacing: 0,
+		lineHeight,
 		scaledCellWidth,
 		scaledCellHeight,
 		scaledCharWidth,
@@ -55,9 +55,9 @@ export function generateConfig(
 		fontSize: fontInfo.fontSize,
 		fontWeight: fontInfo.fontWeight as FontWeight,
 		fontWeightBold: 'bold',
-		allowTransparency: false, //terminal.options.allowTransparency,
-		drawBoldTextInBrightColors: false, //terminal.options.drawBoldTextInBrightColors,
-		minimumContrastRatio: 1, //terminal.options.minimumContrastRatio,
+		allowTransparency: false,
+		drawBoldTextInBrightColors: false,
+		minimumContrastRatio: 1,
 		colors: clonedColors
 	};
 }

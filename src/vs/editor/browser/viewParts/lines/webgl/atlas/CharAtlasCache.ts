@@ -9,7 +9,7 @@
 
 import { WebglCharAtlas } from './WebglCharAtlas';
 import { ICharAtlasConfig } from './Types';
-import { generateConfig } from 'vs/editor/browser/viewParts/lines/webgl/atlas/CharAtlasUtils';
+import { configEquals, generateConfig } from 'vs/editor/browser/viewParts/lines/webgl/atlas/CharAtlasUtils';
 import { IColorSet } from 'vs/editor/browser/viewParts/lines/webgl/base/Types';
 import { FontInfo } from 'vs/editor/common/config/fontInfo';
 
@@ -18,7 +18,7 @@ interface ICharAtlasCacheEntry {
 	config: ICharAtlasConfig;
 	// N.B. This implementation potentially holds onto copies of the terminal forever, so
 	// this may cause memory leaks.
-	// ownedBy: Terminal[];
+	ownedBy: object[];
 }
 
 const charAtlasCache: ICharAtlasCacheEntry[] = [];
@@ -30,7 +30,7 @@ const charAtlasCache: ICharAtlasCacheEntry[] = [];
  * @param colors The colors to use.
  */
 export function acquireCharAtlas(
-	// terminal: Terminal,
+	owner: object,
 	colors: IColorSet,
 	scaledCellWidth: number,
 	scaledCellHeight: number,
@@ -40,42 +40,42 @@ export function acquireCharAtlas(
 	lineHeight: number,
 	fontInfo: FontInfo
 ): WebglCharAtlas {
-	const newConfig = generateConfig(scaledCellWidth, scaledCellHeight, scaledCharWidth, scaledCharHeight, /*terminal,*/ colors, devicePixelRatio, lineHeight, fontInfo);
+	const newConfig = generateConfig(scaledCellWidth, scaledCellHeight, scaledCharWidth, scaledCharHeight, colors, devicePixelRatio, lineHeight, fontInfo);
 
 	// Check to see if the terminal already owns this config
-	// for (let i = 0; i < charAtlasCache.length; i++) {
-	// 	const entry = charAtlasCache[i];
-	// 	const ownedByIndex = entry.ownedBy.indexOf(terminal);
-	// 	if (ownedByIndex >= 0) {
-	// 		if (configEquals(entry.config, newConfig)) {
-	// 			return entry.atlas;
-	// 		}
-	// 		// The configs differ, release the terminal from the entry
-	// 		if (entry.ownedBy.length === 1) {
-	// 			entry.atlas.dispose();
-	// 			charAtlasCache.splice(i, 1);
-	// 		} else {
-	// 			entry.ownedBy.splice(ownedByIndex, 1);
-	// 		}
-	// 		break;
-	// 	}
-	// }
+	for (let i = 0; i < charAtlasCache.length; i++) {
+		const entry = charAtlasCache[i];
+		const ownedByIndex = entry.ownedBy.indexOf(owner);
+		if (ownedByIndex >= 0) {
+			if (configEquals(entry.config, newConfig)) {
+				return entry.atlas;
+			}
+			// The configs differ, release the terminal from the entry
+			if (entry.ownedBy.length === 1) {
+				entry.atlas.dispose();
+				charAtlasCache.splice(i, 1);
+			} else {
+				entry.ownedBy.splice(ownedByIndex, 1);
+			}
+			break;
+		}
+	}
 
 	// Try match a char atlas from the cache
-	// for (let i = 0; i < charAtlasCache.length; i++) {
-	// 	const entry = charAtlasCache[i];
-	// 	if (configEquals(entry.config, newConfig)) {
-	// 		// Add the terminal to the cache entry and return
-	// 		entry.ownedBy.push(terminal);
-	// 		return entry.atlas;
-	// 	}
-	// }
+	for (let i = 0; i < charAtlasCache.length; i++) {
+		const entry = charAtlasCache[i];
+		if (configEquals(entry.config, newConfig)) {
+			// Add the terminal to the cache entry and return
+			entry.ownedBy.push(owner);
+			return entry.atlas;
+		}
+	}
 
 	// const core: ITerminal = (terminal as any)._core;
 	const newEntry: ICharAtlasCacheEntry = {
 		atlas: new WebglCharAtlas(document, newConfig/*, core.unicodeService*/),
 		config: newConfig,
-		// ownedBy: [terminal]
+		ownedBy: [owner]
 	};
 	charAtlasCache.push(newEntry);
 	return newEntry.atlas;
@@ -85,19 +85,19 @@ export function acquireCharAtlas(
  * Removes a terminal reference from the cache, allowing its memory to be freed.
  * @param terminal The terminal to remove.
  */
-// export function removeTerminalFromCache(terminal: Terminal): void {
-// 	for (let i = 0; i < charAtlasCache.length; i++) {
-// 		const index = charAtlasCache[i].ownedBy.indexOf(terminal);
-// 		if (index !== -1) {
-// 			if (charAtlasCache[i].ownedBy.length === 1) {
-// 				// Remove the cache entry if it's the only terminal
-// 				charAtlasCache[i].atlas.dispose();
-// 				charAtlasCache.splice(i, 1);
-// 			} else {
-// 				// Remove the reference from the cache entry
-// 				charAtlasCache[i].ownedBy.splice(index, 1);
-// 			}
-// 			break;
-// 		}
-// 	}
-// }
+export function removeTerminalFromCache(owner: object): void {
+	for (let i = 0; i < charAtlasCache.length; i++) {
+		const index = charAtlasCache[i].ownedBy.indexOf(owner);
+		if (index !== -1) {
+			if (charAtlasCache[i].ownedBy.length === 1) {
+				// Remove the cache entry if it's the only terminal
+				charAtlasCache[i].atlas.dispose();
+				charAtlasCache.splice(i, 1);
+			} else {
+				// Remove the reference from the cache entry
+				charAtlasCache[i].ownedBy.splice(index, 1);
+			}
+			break;
+		}
+	}
+}

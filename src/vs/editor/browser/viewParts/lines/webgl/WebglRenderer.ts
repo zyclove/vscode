@@ -9,7 +9,7 @@
 
 import { GlyphRenderer } from './GlyphRenderer';
 // import { CursorRenderLayer } from './renderLayer/CursorRenderLayer';
-import { acquireCharAtlas } from './atlas/CharAtlasCache';
+import { acquireCharAtlas, removeTerminalFromCache } from './atlas/CharAtlasCache';
 import { WebglCharAtlas } from './atlas/WebglCharAtlas';
 import { RectangleRenderer } from './RectangleRenderer';
 import { IWebGL2RenderingContext } from './Types';
@@ -160,7 +160,7 @@ export class WebglRenderer extends Disposable {
 			l.dispose();
 		}
 		this._canvas.parentElement?.removeChild(this._canvas);
-		// removeTerminalFromCache(this._terminal);
+		removeTerminalFromCache(this);
 		super.dispose();
 	}
 
@@ -291,7 +291,7 @@ export class WebglRenderer extends Disposable {
 			return;
 		}
 
-		const atlas = acquireCharAtlas(/*this._terminal, */this._colors, this.dimensions.scaledCellWidth, this.dimensions.scaledCellHeight, this.dimensions.scaledCharWidth, this.dimensions.scaledCharHeight, window.devicePixelRatio, this._viewportDims.options.lineHeight, fontInfo);
+		const atlas = acquireCharAtlas(this, this._colors, this.dimensions.scaledCellWidth, this.dimensions.scaledCellHeight, this.dimensions.scaledCharWidth, this.dimensions.scaledCharHeight, window.devicePixelRatio, this._viewportDims.options.lineHeight, fontInfo);
 		if (!('getRasterizedGlyph' in atlas)) {
 			throw new Error('The webgl renderer only works with the webgl char atlas');
 		}
