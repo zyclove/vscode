@@ -372,7 +372,7 @@ abstract class BareHitTestRequest {
 	public readonly isInContentArea: boolean;
 	public readonly mouseContentHorizontalOffset: number;
 
-	protected readonly mouseColumn: number;
+	public readonly mouseColumn: number;
 
 	constructor(ctx: HitTestContext, editorPos: EditorPagePosition, pos: PageCoordinates, relativePos: CoordinatesRelativeToEditor) {
 		this.editorPos = editorPos;
@@ -711,7 +711,9 @@ export class MouseTargetFactory {
 			return request.fulfillUnknown();
 		}
 
-		const hitTestResult = MouseTargetFactory._doHitTest(ctx, request);
+		const hitTestResult = request.target instanceof HTMLCanvasElement
+			? new ContentHitTestResult(new Position(ctx.getLineNumberAtVerticalOffset(request.mouseVerticalOffset), request.mouseColumn), request.target, null)
+			: MouseTargetFactory._doHitTest(ctx, request);
 
 		if (hitTestResult.type === HitTestResultType.Content) {
 			return MouseTargetFactory.createMouseTargetFromHitTestPosition(ctx, request, hitTestResult.spanNode, hitTestResult.position, hitTestResult.injectedText);
