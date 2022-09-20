@@ -320,21 +320,6 @@ export class ViewLinesWebgl extends ViewPart implements IVisibleLinesHost<ViewLi
 		return true;
 	}
 	public override onScrollChanged(e: viewEvents.ViewScrollChangedEvent): boolean {
-		// if (this._horizontalRevealRequest && e.scrollLeftChanged) {
-		// 	// cancel any outstanding horizontal reveal request if someone else scrolls horizontally.
-		// 	this._horizontalRevealRequest = null;
-		// }
-		// if (this._horizontalRevealRequest && e.scrollTopChanged) {
-		// 	const min = Math.min(this._horizontalRevealRequest.startScrollTop, this._horizontalRevealRequest.stopScrollTop);
-		// 	const max = Math.max(this._horizontalRevealRequest.startScrollTop, this._horizontalRevealRequest.stopScrollTop);
-		// 	if (e.scrollTop < min || e.scrollTop > max) {
-		// 		// cancel any outstanding horizontal reveal request if someone else scrolls vertically.
-		// 		this._horizontalRevealRequest = null;
-		// 	}
-		// }
-		// this.domNode.setWidth(e.scrollWidth);
-		// return this._visibleLines.onScrollChanged(e) || true;
-		this.canvasContainerDomNode.domNode.style.transform = `translateY(${e.scrollTop}px)`;
 		return this._webglRenderer.onScrollChanged(e);
 	}
 
@@ -657,9 +642,6 @@ export class ViewLinesWebgl extends ViewPart implements IVisibleLinesHost<ViewLi
 		// (3) handle scrolling
 		this._linesContent.setLayerHinting(this._canUseLayerHinting);
 		this._linesContent.setContain('strict');
-		const adjustedScrollTop = this._context.viewLayout.getCurrentScrollTop() - viewportData.bigNumbersDelta;
-		this._linesContent.setTop(-adjustedScrollTop);
-		this._linesContent.setLeft(-this._context.viewLayout.getCurrentScrollLeft());
 	}
 
 	// --- width
