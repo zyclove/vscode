@@ -28,6 +28,7 @@ import { TokenizationRegistry } from 'vs/editor/common/languages';
 import { AttributeData } from 'vs/editor/browser/viewParts/lines/webgl/base/AttributeData';
 import { ITokenPresentation } from 'vs/editor/common/encodedTokenAttributes';
 import { Color } from 'vs/base/common/color';
+import { RulerRenderer } from 'vs/editor/browser/viewParts/lines/webgl/RulerRenderer';
 
 /** Work variables to avoid garbage collection. */
 // const w: { fg: number; bg: number; hasFg: boolean; hasBg: boolean; isSelected: boolean } = {
@@ -50,6 +51,7 @@ export class WebglRenderer extends Disposable {
 	private _gl: IWebGL2RenderingContext;
 	private _rectangleRenderer!: RectangleRenderer;
 	private _glyphRenderer!: GlyphRenderer;
+	private _rulerRenderer!: RulerRenderer;
 
 	public dimensions: IRenderDimensions;
 
@@ -162,6 +164,7 @@ export class WebglRenderer extends Disposable {
 	public setColors(colors: IColorSet): void {
 		this._colors = colors;
 
+		this._rulerRenderer.setColors();
 		this._rectangleRenderer.setColors();
 
 		const options = this._context.configuration.options;
@@ -245,6 +248,7 @@ export class WebglRenderer extends Disposable {
 
 		this._rectangleRenderer = new RectangleRenderer(this._viewportDims, this._colors, this._gl, this.dimensions);
 		this._glyphRenderer = new GlyphRenderer(this._viewportDims, this._gl, this.dimensions);
+		this._rulerRenderer = new RulerRenderer(this._context, this._gl, this.dimensions);
 
 		// Update dimensions and acquire char atlas
 		this.onCharSizeChanged();
@@ -324,6 +328,7 @@ export class WebglRenderer extends Disposable {
 		// Render
 		this._rectangleRenderer.render();
 		this._glyphRenderer.render(this._model);
+		this._rulerRenderer.render();
 	}
 
 	private _updateModel(start: number, end: number, viewportData: ViewportData): void {
@@ -333,6 +338,8 @@ export class WebglRenderer extends Disposable {
 		let presentation: ITokenPresentation;
 		let tokenColor: Color;
 		let lineRenderingData: ViewLineRenderingData;
+
+		this._rulerRenderer.update();
 
 		const colorMap = TokenizationRegistry.getColorMap() ?? [];
 		const ydisp = start;
