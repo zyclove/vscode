@@ -13,7 +13,7 @@ import { Position } from 'vs/editor/common/core/position';
 import { Range } from 'vs/editor/common/core/range';
 import { Selection } from 'vs/editor/common/core/selection';
 import { ScrollType } from 'vs/editor/common/editorCommon';
-import { IViewLines, LineVisibleRanges, VisibleRanges, HorizontalPosition, HorizontalRange } from 'vs/editor/browser/view/renderingContext';
+import { IViewLines, LineVisibleRanges, HorizontalPosition, HorizontalRange } from 'vs/editor/browser/view/renderingContext';
 import { ViewContext } from 'vs/editor/common/viewModel/viewContext';
 import * as viewEvents from 'vs/editor/common/viewEvents';
 import { ViewportData } from 'vs/editor/common/viewLayout/viewLinesViewportData';
@@ -344,14 +344,15 @@ export class ViewLinesWebgl extends ViewPart implements IVisibleLinesHost<ViewLi
 	}
 
 	public getLineWidth(lineNumber: number): number {
-		const rendStartLineNumber = this._visibleLines.getStartLineNumber();
-		const rendEndLineNumber = this._visibleLines.getEndLineNumber();
-		if (lineNumber < rendStartLineNumber || lineNumber > rendEndLineNumber) {
-			// Couldn't find line
-			return -1;
-		}
+		return this._webglRenderer.dimensions.canvasWidth;
+		// const rendStartLineNumber = this._visibleLines.getStartLineNumber();
+		// const rendEndLineNumber = this._visibleLines.getEndLineNumber();
+		// if (lineNumber < rendStartLineNumber || lineNumber > rendEndLineNumber) {
+		// 	// Couldn't find line
+		// 	return -1;
+		// }
 
-		return this._visibleLines.getVisibleLine(lineNumber).getWidth();
+		// return this._visibleLines.getVisibleLine(lineNumber).getWidth();
 	}
 
 	public linesVisibleRangesForRange(_range: Range, includeNewLines: boolean): LineVisibleRanges[] | null {
@@ -411,26 +412,28 @@ export class ViewLinesWebgl extends ViewPart implements IVisibleLinesHost<ViewLi
 		return visibleRanges;
 	}
 
-	private _visibleRangesForLineRange(lineNumber: number, startColumn: number, endColumn: number): VisibleRanges | null {
-		if (this.shouldRender()) {
-			// Cannot read from the DOM because it is dirty
-			// i.e. the model & the dom are out of sync, so I'd be reading something stale
-			return null;
-		}
+	// private _visibleRangesForLineRange(lineNumber: number, startColumn: number, endColumn: number): VisibleRanges | null {
+	// 	if (this.shouldRender()) {
+	// 		// Cannot read from the DOM because it is dirty
+	// 		// i.e. the model & the dom are out of sync, so I'd be reading something stale
+	// 		return null;
+	// 	}
 
-		if (lineNumber < this._visibleLines.getStartLineNumber() || lineNumber > this._visibleLines.getEndLineNumber()) {
-			return null;
-		}
+	// 	if (lineNumber < this._visibleLines.getStartLineNumber() || lineNumber > this._visibleLines.getEndLineNumber()) {
+	// 		return null;
+	// 	}
 
-		return this._visibleLines.getVisibleLine(lineNumber).getVisibleRangesForRange(lineNumber, startColumn, endColumn, new DomReadingContext(this.domNode.domNode, this._textRangeRestingSpot));
-	}
+	// 	return this._visibleLines.getVisibleLine(lineNumber).getVisibleRangesForRange(lineNumber, startColumn, endColumn, new DomReadingContext(this.domNode.domNode, this._textRangeRestingSpot));
+	// }
 
 	public visibleRangeForPosition(position: Position): HorizontalPosition | null {
-		const visibleRanges = this._visibleRangesForLineRange(position.lineNumber, position.column, position.column);
-		if (!visibleRanges) {
-			return null;
-		}
-		return new HorizontalPosition(visibleRanges.outsideRenderedLine, visibleRanges.ranges[0].left);
+		const left = position.column * 8;
+		return new HorizontalPosition(false, left);
+		// const visibleRanges = this._visibleRangesForLineRange(position.lineNumber, position.column, position.column);
+		// if (!visibleRanges) {
+		// 	return null;
+		// }
+		// return new HorizontalPosition(visibleRanges.outsideRenderedLine, visibleRanges.ranges[0].left);
 	}
 
 	// --- implementation
