@@ -392,10 +392,12 @@ export class WebglRenderer extends Disposable {
 				}
 
 				const tokenId = lineRenderingData.tokens.findTokenIndexAtOffset(x);
-				const colorId = lineRenderingData.tokens.getForeground(tokenId);
+				const presentation = lineRenderingData.tokens.getPresentation(tokenId);
 				const colorMap = TokenizationRegistry.getColorMap() ?? [];
-				const tokenColor = colorMap[colorId];
+				const tokenColor = colorMap[presentation.foreground];
 				const fg = tokenColor ? Attributes.CM_RGB | AttributeData.fromColorRGB([tokenColor.rgba.r, tokenColor.rgba.g, tokenColor.rgba.b]) : 0;
+				// bold presentation.bold
+				// italic presentation.italic
 
 				const code = chars.charCodeAt(0);
 				if (code !== NULL_CELL_CODE) {
