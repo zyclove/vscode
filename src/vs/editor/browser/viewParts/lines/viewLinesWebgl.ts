@@ -136,6 +136,7 @@ export class ViewLinesWebgl extends ViewPart implements IVisibleLinesHost<ViewLi
 		this.canvasContainerDomNode.setPosition('absolute');
 		this.canvasContainerDomNode.domNode.setAttribute('role', 'presentation');
 		this.canvasContainerDomNode.domNode.setAttribute('aria-hidden', 'true');
+		PartFingerprints.write(this.canvasContainerDomNode.domNode, PartFingerprint.ViewLines);
 
 
 
