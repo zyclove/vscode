@@ -26,6 +26,8 @@ import { FontInfo } from 'vs/editor/common/config/fontInfo';
 import { EditorLayoutInfo, EditorOption } from 'vs/editor/common/config/editorOptions';
 import * as viewEvents from 'vs/editor/common/viewEvents';
 import { ViewContext } from 'vs/editor/common/viewModel/viewContext';
+import { TokenizationRegistry } from 'vs/editor/common/languages';
+import { AttributeData } from 'vs/editor/browser/viewParts/lines/webgl/base/AttributeData';
 
 /** Work variables to avoid garbage collection. */
 // const w: { fg: number; bg: number; hasFg: boolean; hasBg: boolean; isSelected: boolean } = {
@@ -390,14 +392,10 @@ export class WebglRenderer extends Disposable {
 				}
 
 				const tokenId = lineRenderingData.tokens.findTokenIndexAtOffset(x);
-				const colors = [
-					Attributes.CM_RGB | 0xff9999,
-					Attributes.CM_RGB | 0x99ff99,
-					Attributes.CM_RGB | 0x9999ff
-				];
-				// HACK: Fill in fake color for token
-				const fg = tokenId === 0 ? 0 : colors[tokenId % colors.length];
-
+				const colorId = lineRenderingData.tokens.getForeground(tokenId);
+				const colorMap = TokenizationRegistry.getColorMap() ?? [];
+				const tokenColor = colorMap[colorId];
+				const fg = tokenColor ? Attributes.CM_RGB | AttributeData.fromColorRGB([tokenColor.rgba.r, tokenColor.rgba.g, tokenColor.rgba.b]) : 0;
 
 				const code = chars.charCodeAt(0);
 				if (code !== NULL_CELL_CODE) {
