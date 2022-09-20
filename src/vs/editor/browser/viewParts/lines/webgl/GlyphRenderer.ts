@@ -46,13 +46,14 @@ layout (location = ${VertexAttribLocations.TEXSIZE}) in vec2 a_texsize;
 
 uniform mat4 u_projection;
 uniform vec2 u_resolution;
+uniform vec2 u_scrolloffset;
 
 out vec2 v_texcoord;
 
 void main() {
-  vec2 zeroToOne = (a_offset / u_resolution) + a_cellpos + (a_unitquad * a_size);
-  gl_Position = u_projection * vec4(zeroToOne, 0.0, 1.0);
-  v_texcoord = a_texcoord + a_unitquad * a_texsize;
+	vec2 zeroToOne = (a_offset / u_resolution) + a_cellpos + u_scrolloffset + (a_unitquad * a_size);
+	gl_Position = u_projection * vec4(zeroToOne, 0.0, 1.0);
+	v_texcoord = a_texcoord + a_unitquad * a_texsize;
 }`;
 
 const fragmentShaderSource = `#version 300 es
@@ -65,7 +66,7 @@ uniform sampler2D u_texture;
 out vec4 outColor;
 
 void main() {
-  outColor = texture(u_texture, v_texcoord);
+	outColor = texture(u_texture, v_texcoord);
 }`;
 
 const INDICES_PER_CELL = 10;
@@ -87,6 +88,7 @@ export class GlyphRenderer extends Disposable {
 	private _vertexArrayObject: IWebGLVertexArrayObject;
 	private _projectionLocation: WebGLUniformLocation;
 	private _resolutionLocation: WebGLUniformLocation;
+	private _scrollOffsetLocation: WebGLUniformLocation;
 	private _textureLocation: WebGLUniformLocation;
 	private _atlasTexture: WebGLTexture;
 	private _attributesBuffer: WebGLBuffer;
@@ -115,6 +117,7 @@ export class GlyphRenderer extends Disposable {
 		// Uniform locations
 		this._projectionLocation = throwIfFalsy(gl.getUniformLocation(this._program, 'u_projection'));
 		this._resolutionLocation = throwIfFalsy(gl.getUniformLocation(this._program, 'u_resolution'));
+		this._scrollOffsetLocation = throwIfFalsy(gl.getUniformLocation(this._program, 'u_scrolloffset'));
 		this._textureLocation = throwIfFalsy(gl.getUniformLocation(this._program, 'u_texture'));
 
 		// Create and set the vertex array object
@@ -319,6 +322,7 @@ export class GlyphRenderer extends Disposable {
 		// Set uniforms
 		gl.uniformMatrix4fv(this._projectionLocation, false, PROJECTION_MATRIX);
 		gl.uniform2f(this._resolutionLocation, gl.canvas.width, gl.canvas.height);
+		gl.uniform2f(this._scrollOffsetLocation, 0, -(this._yOffset % 1));
 
 		// Draw the viewport
 		gl.drawElementsInstanced(gl.TRIANGLES, 6, gl.UNSIGNED_BYTE, 0, bufferLength / INDICES_PER_CELL);
@@ -335,5 +339,10 @@ export class GlyphRenderer extends Disposable {
 
 	public setDimensions(dimensions: IRenderDimensions): void {
 		this._dimensions = dimensions;
+	}
+
+	private _yOffset: number = 0;
+	public setOffset(yOffset: number): void {
+		this._yOffset = yOffset;
 	}
 }

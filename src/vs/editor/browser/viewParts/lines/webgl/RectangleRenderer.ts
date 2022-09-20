@@ -28,13 +28,14 @@ layout (location = ${VertexAttribLocations.COLOR}) in vec4 a_color;
 layout (location = ${VertexAttribLocations.UNIT_QUAD}) in vec2 a_unitquad;
 
 uniform mat4 u_projection;
+uniform vec2 u_scrolloffset;
 
 out vec4 v_color;
 
 void main() {
-  vec2 zeroToOne = a_position + (a_unitquad * a_size);
-  gl_Position = u_projection * vec4(zeroToOne, 0.0, 1.0);
-  v_color = a_color;
+	vec2 zeroToOne = a_position + u_scrolloffset + (a_unitquad * a_size);
+	gl_Position = u_projection * vec4(zeroToOne, 0.0, 1.0);
+	v_color = a_color;
 }`;
 
 const fragmentShaderSource = `#version 300 es
@@ -45,7 +46,7 @@ in vec4 v_color;
 out vec4 outColor;
 
 void main() {
-  outColor = v_color;
+	outColor = v_color;
 }`;
 
 interface IVertices {
@@ -76,6 +77,7 @@ export class RectangleRenderer extends Disposable {
 	private _vertexArrayObject: IWebGLVertexArrayObject;
 	private _attributesBuffer: WebGLBuffer;
 	private _projectionLocation: WebGLUniformLocation;
+	private _scrollOffsetLocation: WebGLUniformLocation;
 	private _bgFloat!: Float32Array;
 
 	private _vertices: IVertices = {
@@ -145,6 +147,7 @@ export class RectangleRenderer extends Disposable {
 		gl.bindVertexArray(this._vertexArrayObject);
 
 		gl.uniformMatrix4fv(this._projectionLocation, false, PROJECTION_MATRIX);
+		gl.uniform2f(this._scrollOffsetLocation, 0, -(this._yOffset % 1));
 
 		// Bind attributes buffer and draw
 		gl.bindBuffer(gl.ARRAY_BUFFER, this._attributesBuffer);
@@ -304,5 +307,10 @@ export class RectangleRenderer extends Disposable {
 			((color.rgba >> 8) & 0xFF) / 255,
 			((color.rgba) & 0xFF) / 255
 		]);
+	}
+
+	private _yOffset: number = 0;
+	public setOffset(yOffset: number): void {
+		this._yOffset = yOffset;
 	}
 }

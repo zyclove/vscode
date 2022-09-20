@@ -510,6 +510,13 @@ export class WebglRenderer extends Disposable {
 			this._lastScrollHeight = e.scrollHeight;
 			this.onResize();
 		}
+		if (e.scrollTopChanged) {
+			const cssPixelOffset = e.scrollTop % Math.floor(this.dimensions.actualCellHeight);
+			const clipspaceOffset = cssPixelOffset / this.dimensions.canvasHeight;
+			this._glyphRenderer.setOffset(clipspaceOffset);
+			this._rectangleRenderer.setOffset(clipspaceOffset);
+		}
 		return true;
 	}
+
 }
