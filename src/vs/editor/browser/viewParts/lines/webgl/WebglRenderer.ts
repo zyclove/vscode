@@ -191,13 +191,17 @@ export class WebglRenderer extends Disposable {
 		// and the terminal needs to refreshed
 		if (this._devicePixelRatio !== window.devicePixelRatio) {
 			this._devicePixelRatio = window.devicePixelRatio;
-			this.onResize(this._viewportDims.cols, this._viewportDims.rows);
+			this.onResize();
 		}
 	}
 
-	public onResize(cols: number, rows: number): void {
+	public onResize(): void {
+		const options = this._context.configuration.options;
+		const fontInfo = options.get(EditorOption.fontInfo);
+		const layoutInfo = options.get(EditorOption.layoutInfo);
+
 		// Update character and canvas dimensions
-		this._updateDimensions();
+		this._updateDimensions2(layoutInfo);
 
 		this._model.resize(this._viewportDims.cols, this._viewportDims.rows);
 
@@ -221,8 +225,6 @@ export class WebglRenderer extends Disposable {
 		this._glyphRenderer.setDimensions(this.dimensions);
 		this._glyphRenderer.onResize();
 
-		const options = this._context.configuration.options;
-		const fontInfo = options.get(EditorOption.fontInfo);
 		this._refreshCharAtlas(fontInfo);
 
 		// Force a full refresh. Resizing `_glyphRenderer` should clear it already,
@@ -826,8 +828,14 @@ export class WebglRenderer extends Disposable {
 		return true;
 	}
 
+	private _lastScrollWidth: number = 0;
+	private _lastScrollHeight: number = 0;
 	public onScrollChanged(e: viewEvents.ViewScrollChangedEvent): boolean {
-		// console.log('onScrollChanged', e);
+		if (e.scrollWidth !== this._lastScrollWidth || e.scrollHeight !== this._lastScrollHeight) {
+			this._lastScrollWidth = e.scrollWidth;
+			this._lastScrollHeight = e.scrollHeight;
+			this.onResize();
+		}
 		return true;
 	}
 }
