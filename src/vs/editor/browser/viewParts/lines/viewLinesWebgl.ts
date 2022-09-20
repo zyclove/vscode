@@ -172,7 +172,7 @@ export class ViewLinesWebgl extends ViewPart implements IVisibleLinesHost<ViewLi
 			},
 			this.canvasContainerDomNode.domNode
 		);
-		console.log('webgl renderer', this._webglRenderer);
+		// console.log('webgl renderer', this._webglRenderer);
 
 
 
@@ -230,38 +230,7 @@ export class ViewLinesWebgl extends ViewPart implements IVisibleLinesHost<ViewLi
 	// ---- begin view event handlers
 
 	public override onConfigurationChanged(e: viewEvents.ViewConfigurationChangedEvent): boolean {
-		this._visibleLines.onConfigurationChanged(e);
-		if (e.hasChanged(EditorOption.wrappingInfo)) {
-			this._maxLineWidth = 0;
-		}
-
-		const options = this._context.configuration.options;
-		const fontInfo = options.get(EditorOption.fontInfo);
-		const wrappingInfo = options.get(EditorOption.wrappingInfo);
-		const layoutInfo = options.get(EditorOption.layoutInfo);
-
-		this._lineHeight = options.get(EditorOption.lineHeight);
-		this._typicalHalfwidthCharacterWidth = fontInfo.typicalHalfwidthCharacterWidth;
-		this._isViewportWrapping = wrappingInfo.isViewportWrapping;
-		this._revealHorizontalRightPadding = options.get(EditorOption.revealHorizontalRightPadding);
-		this._horizontalScrollbarHeight = layoutInfo.horizontalScrollbarHeight;
-		this._cursorSurroundingLines = options.get(EditorOption.cursorSurroundingLines);
-		this._cursorSurroundingLinesStyle = options.get(EditorOption.cursorSurroundingLinesStyle);
-		this._canUseLayerHinting = !options.get(EditorOption.disableLayerHinting);
-
-		// sticky scroll
-		this._stickyScrollEnabled = options.get(EditorOption.stickyScroll).enabled;
-		this._maxNumberStickyLines = options.get(EditorOption.stickyScroll).maxLineCount;
-
-		applyFontInfo(this.domNode, fontInfo);
-
-		this._onOptionsMaybeChanged();
-
-		if (e.hasChanged(EditorOption.layoutInfo)) {
-			this._maxLineWidth = 0;
-		}
-
-		return true;
+		return this._webglRenderer.onConfigurationChanged(e);
 	}
 	private _onOptionsMaybeChanged(): boolean {
 		const conf = this._context.configuration;
@@ -351,20 +320,22 @@ export class ViewLinesWebgl extends ViewPart implements IVisibleLinesHost<ViewLi
 		return true;
 	}
 	public override onScrollChanged(e: viewEvents.ViewScrollChangedEvent): boolean {
-		if (this._horizontalRevealRequest && e.scrollLeftChanged) {
-			// cancel any outstanding horizontal reveal request if someone else scrolls horizontally.
-			this._horizontalRevealRequest = null;
-		}
-		if (this._horizontalRevealRequest && e.scrollTopChanged) {
-			const min = Math.min(this._horizontalRevealRequest.startScrollTop, this._horizontalRevealRequest.stopScrollTop);
-			const max = Math.max(this._horizontalRevealRequest.startScrollTop, this._horizontalRevealRequest.stopScrollTop);
-			if (e.scrollTop < min || e.scrollTop > max) {
-				// cancel any outstanding horizontal reveal request if someone else scrolls vertically.
-				this._horizontalRevealRequest = null;
-			}
-		}
-		this.domNode.setWidth(e.scrollWidth);
-		return this._visibleLines.onScrollChanged(e) || true;
+		// if (this._horizontalRevealRequest && e.scrollLeftChanged) {
+		// 	// cancel any outstanding horizontal reveal request if someone else scrolls horizontally.
+		// 	this._horizontalRevealRequest = null;
+		// }
+		// if (this._horizontalRevealRequest && e.scrollTopChanged) {
+		// 	const min = Math.min(this._horizontalRevealRequest.startScrollTop, this._horizontalRevealRequest.stopScrollTop);
+		// 	const max = Math.max(this._horizontalRevealRequest.startScrollTop, this._horizontalRevealRequest.stopScrollTop);
+		// 	if (e.scrollTop < min || e.scrollTop > max) {
+		// 		// cancel any outstanding horizontal reveal request if someone else scrolls vertically.
+		// 		this._horizontalRevealRequest = null;
+		// 	}
+		// }
+		// this.domNode.setWidth(e.scrollWidth);
+		// return this._visibleLines.onScrollChanged(e) || true;
+		this.canvasContainerDomNode.domNode.style.transform = `translateY(${e.scrollTop}px)`;
+		return this._webglRenderer.onScrollChanged(e);
 	}
 
 	public override onTokensChanged(e: viewEvents.ViewTokensChangedEvent): boolean {
@@ -622,7 +593,9 @@ export class ViewLinesWebgl extends ViewPart implements IVisibleLinesHost<ViewLi
 	}
 
 	public renderText(viewportData: ViewportData): void {
-		console.log('ViewLinesWebgl#renderText', viewportData);
+		// TODO: Update model in other methods, do actual render call here?
+
+		// console.log('ViewLinesWebgl#renderText', viewportData);
 		// Convert from 1- to 0-based
 		this._webglRenderer.renderRows(viewportData.startLineNumber - 1, viewportData.endLineNumber - 1, viewportData);
 

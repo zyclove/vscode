@@ -368,12 +368,21 @@ export class WebglRenderer extends Disposable {
 	}
 
 	private _updateModel(start: number, end: number, viewportData: ViewportData): void {
+		// console.log('WebglRenderer.updateModel', { start, end });
 		let i, x, y: number;
+		let row: number;
+
 		let lineRenderingData: ViewLineRenderingData;
-		for (y = start; y <= end; y++) {
+		const ydisp = start;
+		end -= start;
+		start = 0;
+		for (y = start; y <= end - start; y++) {
+			row = y + ydisp;
 			// Convert 0- to 1-based
-			lineRenderingData = viewportData.getViewLineRenderingData(y + 1);
+			lineRenderingData = viewportData.getViewLineRenderingData(row + 1);
+			// console.log('  lineRenderingData', lineRenderingData);
 			this._model.lineLengths[y] = 0;
+			// TODO: Use lineRenderingData.maxColumn
 			for (x = 0; x < this._viewportDims.cols; x++) {
 				const chars = lineRenderingData.content[x];
 				if (chars === undefined) {
@@ -791,6 +800,11 @@ export class WebglRenderer extends Disposable {
 		}
 		this._updateDimensions2(layoutInfo);
 		this._refreshCharAtlas(fontInfo);
+		return true;
+	}
+
+	public onScrollChanged(e: viewEvents.ViewScrollChangedEvent): boolean {
+		// console.log('onScrollChanged', e);
 		return true;
 	}
 }
