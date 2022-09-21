@@ -786,7 +786,9 @@ export class Emitter<T> {
 			// start/stop performance insight collection
 			this._perfMon?.start(this._deliveryQueue.size);
 
-			this._deliveryQueue.deliver();
+			setTimeout(() => {
+				this._deliveryQueue!.deliver();
+			});
 
 			this._perfMon?.stop();
 		}
