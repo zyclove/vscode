@@ -228,7 +228,7 @@ export class DebugService implements IDebugService {
 		this.disposables.dispose();
 	}
 
-	//---- state management
+	//---- state management asdasd
 
 	get state(): State {
 		const focusedSession = this.viewModel.focusedSession;
