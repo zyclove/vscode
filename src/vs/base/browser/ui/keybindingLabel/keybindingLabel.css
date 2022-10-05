@@ -9,7 +9,7 @@
 	line-height: 10px;
 }
 
-.monaco-keybinding>.monaco-keybinding-key {
+.monaco-keybinding > .monaco-keybinding-key {
 	display: inline-block;
 	border-style: solid;
 	border-width: 1px;
@@ -20,18 +20,18 @@
 	margin: 0 2px;
 }
 
-.monaco-keybinding>.monaco-keybinding-key:first-child {
+.monaco-keybinding > .monaco-keybinding-key:first-child {
 	margin-left: 0;
 }
 
-.monaco-keybinding>.monaco-keybinding-key:last-child {
+.monaco-keybinding > .monaco-keybinding-key:last-child {
 	margin-right: 0;
 }
 
-.monaco-keybinding>.monaco-keybinding-key-separator {
+.monaco-keybinding > .monaco-keybinding-key-separator {
 	display: inline-block;
 }
 
-.monaco-keybinding>.monaco-keybinding-key-chord-separator {
+.monaco-keybinding > .monaco-keybinding-key-chord-separator {
 	width: 6px;
 }
