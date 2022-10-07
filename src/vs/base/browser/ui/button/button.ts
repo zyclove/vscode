@@ -32,7 +32,7 @@ export interface IButtonStyles {
 	buttonSecondaryBackground?: Color;
 	buttonSecondaryHoverBackground?: Color;
 	buttonSecondaryForeground?: Color;
-	buttonBorder?: Color;
+	buttonBorder?: Color; // Comment
 }
 
 const defaultOptions: IButtonStyles = {
