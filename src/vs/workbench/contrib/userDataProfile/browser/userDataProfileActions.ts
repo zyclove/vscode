@@ -248,6 +248,7 @@ export class RenameProfileAction extends Action2 {
 				profile
 			})),
 			{
+				title: localize('edit settings profile', "Rename Settings Profile..."),
 				placeHolder: localize('pick profile to rename', "Select Settings Profile to Rename"),
 			});
 		return pick?.profile;
@@ -294,6 +295,7 @@ registerAction2(class DeleteProfileAction extends Action2 {
 					profile
 				})),
 				{
+					title: localize('delete settings profile', "Delete Settings Profile..."),
 					placeHolder: localize('pick profile to delete', "Select Settings Profiles to Delete"),
 					canPickMany: true
 				});

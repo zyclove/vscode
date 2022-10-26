@@ -472,6 +472,8 @@ export class RemoteStatusIndicator extends Disposable implements IWorkbenchContr
 		};
 
 		const quickPick = this.quickInputService.createQuickPick();
+		quickPick.title = nls.localize('Remote Menu', 'Open a Remote Window');
+		quickPick.placeholder = nls.localize('Remote Menu Placeholder', 'Search remote options');
 		quickPick.items = computeItems();
 		quickPick.sortByLabel = false;
 		quickPick.canSelectMany = false;

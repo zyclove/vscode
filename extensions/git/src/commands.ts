@@ -2007,9 +2007,10 @@ export class CommandCenter {
 
 		const quickpick = window.createQuickPick();
 		quickpick.items = picks;
+		quickpick.title = localize('select branch or tag', "Git: Checkout to...");
 		quickpick.placeholder = opts?.detached
-			? localize('select a ref to checkout detached', 'Select a ref to checkout in detached mode')
-			: localize('select a ref to checkout', 'Select a ref to checkout');
+			? localize('Search refs to checkout detached', 'Search refs to checkout in detached mode')
+			: localize('Search refs to checkout', 'Search refs to checkout');
 
 		quickpick.show();
 

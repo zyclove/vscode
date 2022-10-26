@@ -233,6 +233,7 @@ registerAction2(class extends Action2 {
 		quickPick.matchOnDescription = true;
 		quickPick.matchOnDetail = true;
 		quickPick.title = localize('pickWalkthroughs', "Open Walkthrough...");
+		quickPick.placeholder = localize('pickWalkthroughsPlaceholder', "Search walkthroughs");
 		quickPick.items = this.getQuickPickItems(contextService, gettingStartedService);
 		quickPick.busy = true;
 		quickPick.onDidAccept(() => {

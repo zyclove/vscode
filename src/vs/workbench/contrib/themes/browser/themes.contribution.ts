@@ -375,7 +375,7 @@ registerAction2(class extends Action2 {
 		const installMessage = localize('installColorThemes', "Install Additional Color Themes...");
 		const browseMessage = '$(plus) ' + localize('browseColorThemes', "Browse Additional Color Themes...");
 		const title = localize('themes.selectColorThemeTitle', "Color Theme");
-		const placeholderMessage = localize('themes.selectTheme', "Search Color Themes (Up/Down Keys to Preview)");
+		const placeholderMessage = localize('themes.selectTheme', "Search themes (Up/Down Keys to Preview)");
 		const marketplaceTag = 'category:themes';
 		const setTheme = (theme: IWorkbenchTheme | undefined, settingsTarget: ThemeSettingTarget) => themeService.setColorTheme(theme as IWorkbenchColorTheme, settingsTarget);
 		const getMarketplaceColorThemes = (publisher: string, name: string, version: string) => themeService.getMarketplaceColorThemes(publisher, name, version);
@@ -413,7 +413,7 @@ registerAction2(class extends Action2 {
 
 		const installMessage = localize('installIconThemes', "Install Additional File Icon Themes...");
 		const title = localize('themes.selectIconThemeTitle', "File Icon Theme");
-		const placeholderMessage = localize('themes.selectIconTheme', "Search File Icon Themes (Up/Down Keys to Preview)");
+		const placeholderMessage = localize('themes.selectIconTheme', "Search themes (Up/Down Keys to Preview)");
 		const marketplaceTag = 'tag:icon-theme';
 		const setTheme = (theme: IWorkbenchTheme | undefined, settingsTarget: ThemeSettingTarget) => themeService.setFileIconTheme(theme as IWorkbenchFileIconTheme, settingsTarget);
 		const getMarketplaceColorThemes = (publisher: string, name: string, version: string) => themeService.getMarketplaceFileIconThemes(publisher, name, version);
@@ -450,7 +450,7 @@ registerAction2(class extends Action2 {
 		const installMessage = localize('installProductIconThemes', "Install Additional Product Icon Themes...");
 		const browseMessage = '$(plus) ' + localize('browseProductIconThemes', "Browse Additional Product Icon Themes...");
 		const title = localize('themes.selectProductIconThemeTitle', "Product Icon Theme");
-		const placeholderMessage = localize('themes.selectProductIconTheme', "Search Product Icon Themes (Up/Down Keys to Preview)");
+		const placeholderMessage = localize('themes.selectProductIconTheme', "Search themes (Up/Down Keys to Preview)");
 		const marketplaceTag = 'tag:product-icon-theme';
 		const setTheme = (theme: IWorkbenchTheme | undefined, settingsTarget: ThemeSettingTarget) => themeService.setProductIconTheme(theme as IWorkbenchProductIconTheme, settingsTarget);
 		const getMarketplaceColorThemes = (publisher: string, name: string, version: string) => themeService.getMarketplaceProductIconThemes(publisher, name, version);
