@@ -30,7 +30,8 @@ class RemoteSourceProviderQuickPick {
 			this.quickpick = window.createQuickPick();
 			this.quickpick.ignoreFocusOut = true;
 			if (this.provider.supportsQuery) {
-				this.quickpick.placeholder = this.provider.placeholder ?? l10n.t('Repository name (type to search)');
+				this.quickpick.title = l10n.t('Clone from GitHub');
+				this.quickpick.placeholder = this.provider.placeholder ?? l10n.t('Search repositories');
 				this.quickpick.onDidChangeValue(this.onDidChangeValue, this);
 			} else {
 				this.quickpick.placeholder = this.provider.placeholder ?? l10n.t('Repository name');
@@ -121,9 +122,11 @@ export async function pickRemoteSource(model: Model, options: PickRemoteSourceOp
 		...recentSources.sort((a, b) => b.timestamp - a.timestamp)
 	];
 
+	quickpick.title = l10n.t('Clone Repository');
+
 	quickpick.placeholder = options.placeholder ?? (remoteProviders.length === 0
 		? l10n.t('Provide repository URL')
-		: l10n.t('Provide repository URL or pick a repository source.'));
+		: l10n.t('Enter a repository URL or pick a repository source'));
 
 	const updatePicks = (value?: string) => {
 		if (value) {
