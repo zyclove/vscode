@@ -260,7 +260,8 @@ export class ConfigureSnippets extends SnippetsAction {
 		}
 
 		const pick = await quickInputService.pick(([] as QuickPickInput[]).concat(existing, globalSnippetPicks, workspaceSnippetPicks, picks.future), {
-			placeHolder: nls.localize('openSnippet.pickLanguage', "Select Snippets File or Create Snippets"),
+			title: nls.localize('openSnippet.title', "Configure User Snippets"),
+			placeHolder: nls.localize('openSnippet.pickLanguage', "Search Snippets"),
 			matchOnDescription: true
 		});
 
