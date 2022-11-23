@@ -3,10 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 use crate::commands::tunnels::ShutdownSignal;
-use crate::constants::{CONTROL_PORT, PROTOCOL_VERSION, VSCODE_CLI_VERSION};
+use crate::constants::{
+	CONTROL_PORT, EDITOR_WEB_URL, PROTOCOL_VERSION, QUALITYLESS_SERVER_NAME, VSCODE_CLI_VERSION,
+};
 use crate::log;
 use crate::self_update::SelfUpdate;
 use crate::state::LauncherPaths;
+use crate::tunnels::protocol::HttpRequestParams;
+use crate::tunnels::socket_signal::CloseReason;
 use crate::update_service::{Platform, UpdateService};
 use crate::util::errors::{
 	wrap, AnyError, MismatchedLaunchModeError, NoAttachedServerError, ServerWriteError,
@@ -15,10 +19,10 @@ use crate::util::http::{
 	DelegatedHttpRequest, DelegatedSimpleHttp, FallbackSimpleHttp, ReqwestSimpleHttp,
 };
 use crate::util::io::SilentCopyProgress;
+use crate::util::is_integrated_cli;
 use crate::util::sync::{new_barrier, Barrier};
 use opentelemetry::trace::SpanKind;
 use opentelemetry::KeyValue;
-use serde::Serialize;
 use std::collections::HashMap;
 use std::convert::Infallible;
 use std::env;
@@ -38,12 +42,12 @@ use super::paths::prune_stopped_servers;
 use super::port_forwarder::{PortForwarding, PortForwardingProcessor};
 use super::protocol::{
 	CallServerHttpParams, CallServerHttpResult, ClientRequestMethod, EmptyResult, ErrorResponse,
-	ForwardParams, ForwardResult, GetHostnameResponse, HttpRequestParams, RefServerMessageParams,
-	ResponseError, ServeParams, ServerLog, ServerMessageParams, ServerRequestMethod,
-	SuccessResponse, ToClientRequest, ToServerRequest, UnforwardParams, UpdateParams, UpdateResult,
-	VersionParams,
+	ForwardParams, ForwardResult, GetHostnameResponse, ResponseError, ServeParams, ServerLog,
+	ServerMessageParams, ServerRequestMethod, SuccessResponse, ToClientRequest, ToServerRequest,
+	UnforwardParams, UpdateParams, UpdateResult, VersionParams,
 };
-use super::server_bridge::{get_socket_rw_stream, FromServerMessage, ServerBridge};
+use super::server_bridge::{get_socket_rw_stream, ServerBridge};
+use super::socket_signal::{ClientMessageDecoder, ServerMessageSink, SocketSignal};
 
 type ServerBridgeList = Option<Vec<(u16, ServerBridge)>>;
 type ServerBridgeListLock = Arc<Mutex<ServerBridgeList>>;
@@ -122,39 +126,6 @@ enum ServerSignal {
 	Respawn,
 }
 
-struct CloseReason(String);
-
-enum SocketSignal {
-	/// Signals bytes to send to the socket.
-	Send(Vec<u8>),
-	/// Closes the socket (e.g. as a result of an error)
-	CloseWith(CloseReason),
-	/// Disposes ServerBridge corresponding to an ID
-	CloseServerBridge(u16),
-}
-
-impl SocketSignal {
-	fn from_message<T>(msg: &T) -> Self
-	where
-		T: Serialize + ?Sized,
-	{
-		SocketSignal::Send(rmp_serde::to_vec_named(msg).unwrap())
-	}
-}
-
-impl FromServerMessage for SocketSignal {
-	fn from_server_message(i: u16, body: &[u8]) -> Self {
-		SocketSignal::from_message(&ToClientRequest {
-			id: None,
-			params: ClientRequestMethod::servermsg(RefServerMessageParams { i, body }),
-		})
-	}
-
-	fn from_closed_server_bridge(i: u16) -> Self {
-		SocketSignal::CloseServerBridge(i)
-	}
-}
-
 pub struct ServerTermination {
 	/// Whether the server should be respawned in a new binary (see ServerSignal.Respawn).
 	pub respawn: bool,
@@ -162,7 +133,10 @@ pub struct ServerTermination {
 }
 
 fn print_listening(log: &log::Logger, tunnel_name: &str) {
-	debug!(log, "VS Code Server is listening for incoming connections");
+	debug!(
+		log,
+		"{} is listening for incoming connections", QUALITYLESS_SERVER_NAME
+	);
 
 	let home_dir = dirs::home_dir().unwrap_or_else(|| PathBuf::from(""));
 	let current_dir = env::current_dir().unwrap_or_else(|_| PathBuf::from(""));
@@ -173,7 +147,12 @@ fn print_listening(log: &log::Logger, tunnel_name: &str) {
 		current_dir
 	};
 
-	let mut addr = url::Url::parse("https://insiders.vscode.dev").unwrap();
+	let base_web_url = match EDITOR_WEB_URL {
+		Some(u) => u,
+		None => return,
+	};
+
+	let mut addr = url::Url::parse(base_web_url).unwrap();
 	{
 		let mut ps = addr.path_segments_mut().unwrap();
 		ps.push("tunnel");
@@ -199,7 +178,7 @@ pub async fn serve(
 	launcher_paths: &LauncherPaths,
 	code_server_args: &CodeServerArgs,
 	platform: Platform,
-	shutdown_rx: mpsc::Receiver<ShutdownSignal>,
+	shutdown_rx: mpsc::UnboundedReceiver<ShutdownSignal>,
 ) -> Result<ServerTermination, AnyError> {
 	let mut port = tunnel.add_port_direct(CONTROL_PORT).await?;
 	print_listening(log, &tunnel.name);
@@ -719,7 +698,15 @@ async fn handle_serve(
 		}
 	};
 
-	attach_server_bridge(&log, server, socket_tx, server_bridges, params.socket_id).await?;
+	attach_server_bridge(
+		&log,
+		server,
+		socket_tx,
+		server_bridges,
+		params.socket_id,
+		params.compress,
+	)
+	.await?;
 	Ok(EmptyResult {})
 }
 
@@ -729,8 +716,22 @@ async fn attach_server_bridge(
 	socket_tx: mpsc::Sender<SocketSignal>,
 	server_bridges: ServerBridgeListLock,
 	socket_id: u16,
+	compress: bool,
 ) -> Result<u16, AnyError> {
-	let attached_fut = ServerBridge::new(&code_server.socket, socket_id, &socket_tx).await;
+	let (server_messages, decoder) = if compress {
+		(
+			ServerMessageSink::new_compressed(socket_tx),
+			ClientMessageDecoder::new_compressed(),
+		)
+	} else {
+		(
+			ServerMessageSink::new_plain(socket_tx),
+			ClientMessageDecoder::new_plain(),
+		)
+	};
+
+	let attached_fut =
+		ServerBridge::new(&code_server.socket, socket_id, server_messages, decoder).await;
 
 	match attached_fut {
 		Ok(a) => {
@@ -783,6 +784,13 @@ async fn handle_update(
 	log: &log::Logger,
 	params: &UpdateParams,
 ) -> Result<UpdateResult, AnyError> {
+	if let Ok(true) = is_integrated_cli() {
+		return Ok(UpdateResult {
+			up_to_date: true,
+			did_update: false,
+		});
+	}
+
 	let update_service = UpdateService::new(log.clone(), http.clone());
 	let updater = SelfUpdate::new(&update_service)?;
 	let latest_release = updater.get_current_release().await?;

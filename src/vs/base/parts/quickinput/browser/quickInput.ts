@@ -15,7 +15,7 @@ import { IKeybindingLabelStyles } from 'vs/base/browser/ui/keybindingLabel/keybi
 import { IListRenderer, IListVirtualDelegate } from 'vs/base/browser/ui/list/list';
 import { IListOptions, IListStyles, List } from 'vs/base/browser/ui/list/listWidget';
 import { IProgressBarStyles, ProgressBar } from 'vs/base/browser/ui/progressbar/progressbar';
-import { Toggle } from 'vs/base/browser/ui/toggle/toggle';
+import { IToggleStyles, Toggle } from 'vs/base/browser/ui/toggle/toggle';
 import { Action } from 'vs/base/common/actions';
 import { equals } from 'vs/base/common/arrays';
 import { TimeoutTimer } from 'vs/base/common/async';
@@ -56,6 +56,7 @@ export interface IQuickInputOptions {
 export interface IQuickInputStyles {
 	widget: IQuickInputWidgetStyles;
 	inputBox: IInputBoxStyles;
+	toggle: IToggleStyles;
 	countBadge: ICountBadgetyles;
 	button: IButtonStyles;
 	progressBar: IProgressBarStyles;
@@ -541,7 +542,7 @@ class QuickPick<T extends IQuickPickItem> extends QuickInput implements IQuickPi
 		return this._items;
 	}
 
-	private get scrollTop() {
+	get scrollTop() {
 		return this.ui.list.scrollTop;
 	}
 
@@ -1283,7 +1284,7 @@ export class QuickInputController extends Disposable {
 		const extraContainer = dom.append(headerContainer, $('.quick-input-and-message'));
 		const filterContainer = dom.append(extraContainer, $('.quick-input-filter'));
 
-		const inputBox = this._register(new QuickInputBox(filterContainer));
+		const inputBox = this._register(new QuickInputBox(filterContainer, this.styles.inputBox, this.styles.toggle));
 		inputBox.setAttribute('aria-describedby', `${this.idPrefix}message`);
 
 		const visibleCountContainer = dom.append(filterContainer, $('.quick-input-visible-count'));

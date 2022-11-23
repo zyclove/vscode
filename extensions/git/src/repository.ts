@@ -541,7 +541,6 @@ class FileEventLogger {
 
 	private onDidChangeLogLevel(logLevel: LogLevel): void {
 		this.eventDisposable.dispose();
-		this.logger.appendLine(l10n.t('Log level: {0}', LogLevel[logLevel]));
 
 		if (logLevel > LogLevel.Debug) {
 			return;
@@ -1231,12 +1230,8 @@ export class Repository implements Disposable {
 	}
 
 	async add(resources: Uri[], opts?: { update?: boolean }): Promise<void> {
-		const config = workspace.getConfiguration('git', Uri.file(this.root));
-		const optimisticUpdate = config.get<boolean>('optimisticUpdate') === true;
-		const operation = optimisticUpdate ? Operation.AddNoProgress : Operation.Add;
-
 		await this.run(
-			operation,
+			this.optimisticUpdateEnabled() ? Operation.AddNoProgress : Operation.Add,
 			async () => {
 				await this.repository.add(resources.map(r => r.fsPath), opts);
 				this.closeDiffEditors([], [...resources.map(r => r.fsPath)]);
@@ -1286,12 +1281,8 @@ export class Repository implements Disposable {
 	}
 
 	async revert(resources: Uri[]): Promise<void> {
-		const config = workspace.getConfiguration('git', Uri.file(this.root));
-		const optimisticUpdate = config.get<boolean>('optimisticUpdate') === true;
-		const operation = optimisticUpdate ? Operation.RevertFilesNoProgress : Operation.RevertFiles;
-
 		await this.run(
-			operation,
+			this.optimisticUpdateEnabled() ? Operation.RevertFilesNoProgress : Operation.RevertFiles,
 			async () => {
 				await this.repository.revert('HEAD', resources.map(r => r.fsPath));
 				this.closeDiffEditors([...resources.length !== 0 ?
@@ -1299,6 +1290,9 @@ export class Repository implements Disposable {
 					this.indexGroup.resourceStates.map(r => r.resourceUri.fsPath)], []);
 			},
 			() => {
+				const config = workspace.getConfiguration('git', Uri.file(this.repository.root));
+				const untrackedChanges = config.get<'mixed' | 'separate' | 'hidden'>('untrackedChanges');
+
 				const resourcePaths = resources.length === 0 ?
 					this.indexGroup.resourceStates.map(r => r.resourceUri.fsPath) : resources.map(r => r.fsPath);
 
@@ -1320,10 +1314,13 @@ export class Repository implements Disposable {
 					.filter(r => !resourcePaths.includes(r.resourceUri.fsPath));
 
 				// Add resource(s) to working group
-				const workingTreeGroup = [...this.workingTreeGroup.resourceStates, ...trackedResources];
+				const workingTreeGroup = untrackedChanges === 'mixed' ?
+					[...this.workingTreeGroup.resourceStates, ...trackedResources, ...untrackedResources] :
+					[...this.workingTreeGroup.resourceStates, ...trackedResources];
 
 				// Add resource(s) to untracked group
-				const untrackedGroup = [...this.untrackedGroup.resourceStates, ...untrackedResources];
+				const untrackedGroup = untrackedChanges === 'separate' ?
+					[...this.untrackedGroup.resourceStates, ...untrackedResources] : undefined;
 
 				return { indexGroup, workingTreeGroup, untrackedGroup };
 			});
@@ -1401,12 +1398,8 @@ export class Repository implements Disposable {
 	}
 
 	async clean(resources: Uri[]): Promise<void> {
-		const config = workspace.getConfiguration('git', Uri.file(this.root));
-		const optimisticUpdate = config.get<boolean>('optimisticUpdate') === true;
-		const operation = optimisticUpdate ? Operation.CleanNoProgress : Operation.Clean;
-
 		await this.run(
-			operation,
+			this.optimisticUpdateEnabled() ? Operation.CleanNoProgress : Operation.Clean,
 			async () => {
 				const toClean: string[] = [];
 				const toCheckout: string[] = [];
@@ -2016,10 +2009,7 @@ export class Repository implements Disposable {
 			const result = await this.retryRun(operation, runOperation);
 
 			if (!isReadOnly(operation)) {
-				const scopedConfig = workspace.getConfiguration('git', Uri.file(this.repository.root));
-				const optimisticUpdate = scopedConfig.get<boolean>('optimisticUpdate') === true;
-
-				await this.updateModelState(optimisticUpdate ? getOptimisticResourceGroups() : undefined);
+				await this.updateModelState(this.optimisticUpdateEnabled() ? getOptimisticResourceGroups() : undefined);
 			}
 
 			return result;
@@ -2479,6 +2469,11 @@ export class Repository implements Disposable {
 		} else {
 			this.isBranchProtectedMatcher = picomatch(branchProtectionGlobs);
 		}
+	}
+
+	private optimisticUpdateEnabled(): boolean {
+		const config = workspace.getConfiguration('git', Uri.file(this.root));
+		return config.get<boolean>('optimisticUpdate') === true;
 	}
 
 	public isBranchProtected(name: string = this.HEAD?.name ?? ''): boolean {
