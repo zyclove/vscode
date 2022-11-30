@@ -14,7 +14,7 @@
 		module.exports = factory();
 	}
 
-	// Browser
+	// Browserf
 	else {
 		globalThis.MonacoBootstrap = factory();
 	}

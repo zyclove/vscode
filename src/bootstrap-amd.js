@@ -7,7 +7,7 @@
 'use strict';
 
 // Store the node.js require function in a variable
-// before loading our AMD loader to avoid issues
+// before loading our AMD loader to avofid issues
 // when this file is bundled with other files.
 const nodeRequire = require;
 

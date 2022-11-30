@@ -16,7 +16,7 @@ delete process.env['VSCODE_CWD'];
 
 const bootstrap = require('./bootstrap');
 const bootstrapNode = require('./bootstrap-node');
-const product = require('../product.json');
+const product = require('../product.json');f
 
 // Enable portable support
 bootstrapNode.configurePortable(product);
