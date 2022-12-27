@@ -774,10 +774,31 @@ export class TerminalInstance extends Disposable implements ITerminalInstance {
 		xterm.raw.buffer.onBufferChange(() => this._refreshAltBufferContextKey());
 
 		this._processManager.onProcessData(e => this._onProcessData(e));
-		xterm.raw.onData(async data => {
-			await this._processManager.write(data);
-			this._onDidInputData.fire(this);
-		});
+
+		if (this._configHelper.config.experimentalLocalLineEditor) {
+			console.warn('Using experimental local line editor');
+			const lineEditor = new LocalLineEditor();
+			lineEditor.onData(async data => {
+				await this._processManager.write(data);
+				this._onDidInputData.fire(this);
+			});
+			xterm.raw.onData(async data => {
+				// TODO: Actual line editing
+				// TODO: Track the input and revert it after
+				// TODO: Disable in the alt buffer, that's a good signal icanon is on
+				// TODO: Progressive enhancement: Turn it on when the shell integration prompt starts
+
+				// If line editor allows it, echo
+				if (lineEditor.write(data)) {
+					xterm._writeText(data);
+				}
+			});
+		} else {
+			xterm.raw.onData(async data => {
+				await this._processManager.write(data);
+				this._onDidInputData.fire(this);
+			});
+		}
 		xterm.raw.onBinary(data => this._processManager.processBinary(data));
 		// Init winpty compat and link handler after process creation as they rely on the
 		// underlying process OS
@@ -2691,4 +2712,31 @@ async function preparePathForShell(originalPath: string, executable: string | un
 
 		c(escapeNonWindowsPath(originalPath));
 	});
+}
+
+class LocalLineEditor {
+	private _buffer: string[] = [];
+
+	private static _flushCharacters: string[] = [
+		'\x09', // Tab
+		'\x0a', // LF
+		'\x0d', // NL
+	];
+
+	private _onData = new Emitter<string>();
+	get onData() { return this._onData.event; }
+
+	write(data: string): boolean {
+		this._buffer.push(data);
+		if (LocalLineEditor._flushCharacters.includes(data)) {
+			this._flush();
+			return false;
+		}
+		return true;
+	}
+
+	private _flush() {
+		this._onData.fire(this._buffer.join(''));
+		this._buffer.length = 0;
+	}
 }

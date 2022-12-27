@@ -568,6 +568,11 @@ const terminalConfiguration: IConfigurationNode = {
 			type: 'boolean',
 			default: false
 		},
+		[TerminalSettingId.ExperimentalLocalLineEditor]: {
+			markdownDescription: localize('terminal.integrated.experimental.localLineEditor', "An experimental feature to mitigate latency when using regular line editors in the terminal."),
+			type: 'boolean',
+			default: false
+		},
 	}
 };
 

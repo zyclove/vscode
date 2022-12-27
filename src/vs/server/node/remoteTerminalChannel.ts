@@ -31,6 +31,7 @@ import { IServerEnvironmentService } from 'vs/server/node/serverEnvironmentServi
 import { IProductService } from 'vs/platform/product/common/productService';
 import { IExtensionManagementService } from 'vs/platform/extensionManagement/common/extensionManagement';
 import { IConfigurationService } from 'vs/platform/configuration/common/configuration';
+import { timeout } from 'vs/base/common/async';
 
 class CustomVariableResolver extends AbstractVariableResolverService {
 	constructor(
@@ -105,6 +106,9 @@ export class RemoteTerminalChannel extends Disposable implements IServerChannel<
 	}
 
 	async call(ctx: RemoteAgentConnectionContext, command: string, args?: any): Promise<any> {
+		// Artificial delay
+		await timeout(1000);
+
 		switch (command) {
 			case '$restartPtyHost': return this._ptyService.restartPtyHost?.apply(this._ptyService, args);
 

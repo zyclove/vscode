@@ -319,6 +319,7 @@ export interface ITerminalConfiguration {
 		decorationsEnabled: boolean;
 	};
 	smoothScrolling: boolean;
+	experimentalLocalLineEditor: boolean;
 }
 
 export const DEFAULT_LOCAL_ECHO_EXCLUDE: ReadonlyArray<string> = ['vim', 'vi', 'nano', 'tmux'];
