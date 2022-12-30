@@ -6,11 +6,12 @@
 import * as vscode from 'vscode';
 import TelemetryReporter from '@vscode/extension-telemetry';
 import { Keychain } from './common/keychain';
-import { GitHubServer, IGitHubServer } from './githubServer';
+import { IGitHubServer } from './githubServer';
 import { arrayEquals } from './common/utils';
 import { ExperimentationTelemetry } from './common/experimentationService';
 import { Log } from './common/logger';
 import { crypto } from './node/crypto';
+import { GitHubServer, InternetAvailableGitHubEnterpriseServer } from './node/githubServer';
 
 interface SessionData {
 	id: string;
@@ -64,12 +65,16 @@ export class GitHubAuthenticationProvider implements vscode.AuthenticationProvid
 				: `${ghesUri?.authority}${ghesUri?.path}.ghes.auth`,
 			this._logger);
 
-		this._githubServer = new GitHubServer(
-			this._logger,
-			this._telemetryReporter,
-			uriHandler,
-			context.extension.extensionKind,
-			ghesUri);
+		if (type === AuthProviderType.githubEnterprise) {
+			this._logger.info(`GitHub Enterprise Server: ${ghesUri?.authority}${ghesUri?.path}`);
+		}
+
+		this._githubServer = type === AuthProviderType.github
+			? new GitHubServer(this._logger, this._telemetryReporter, uriHandler, context.extension.extensionKind, ghesUri)
+			// TODO: until we have a way to detect if vscode.dev/codeExchangeProxyEndpoints/github is able to reach the GitHub Enterprise Server
+			// we will always use the InternetAvailableGitHubEnterpriseServer. Once such a route exists, we can use that to use SimpleGitHubEnterpriseServer
+			// if the GHES instance isn't reachable.
+			: new InternetAvailableGitHubEnterpriseServer(this._logger, this._telemetryReporter, uriHandler, context.extension.extensionKind, ghesUri);
 
 		// Contains the current state of the sessions we have available.
 		this._sessionsPromise = this.readSessions().then((sessions) => {
@@ -243,6 +248,7 @@ export class GitHubAuthenticationProvider implements vscode.AuthenticationProvid
 
 
 			const scopeString = sortedScopes.join(' ');
+			this._logger.info(`Logging in for the following scopes: ${scopeString}`);
 			const token = await this._githubServer.login(scopeString);
 			const session = await this.tokenToSession(token, scopes);
 			this.afterSessionLoad(session);

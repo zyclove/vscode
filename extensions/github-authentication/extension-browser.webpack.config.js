@@ -19,9 +19,10 @@ module.exports = withBrowserDefaults({
 	resolve: {
 		alias: {
 			'uuid': path.resolve(__dirname, 'node_modules/uuid/dist/esm-browser/index.js'),
+			'./node/githubServer': path.resolve(__dirname, 'src/browser/githubServer'),
 			'./node/authServer': path.resolve(__dirname, 'src/browser/authServer'),
 			'./node/crypto': path.resolve(__dirname, 'src/browser/crypto'),
-			'./node/fetch': path.resolve(__dirname, 'src/browser/fetch')
+			'./node/fetch': path.resolve(__dirname, 'src/browser/fetch'),
 		}
 	}
 });
