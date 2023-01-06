@@ -952,6 +952,7 @@ export abstract class AbstractTaskService extends Disposable implements ITaskSer
 		if (storageValue) {
 			try {
 				const values: [string, string][] = JSON.parse(storageValue);
+				console.log('storage value', values);
 				if (Array.isArray(values)) {
 					for (const value of values) {
 						this._persistentTasks.set(value[0], value[1]);
@@ -1022,11 +1023,16 @@ export abstract class AbstractTaskService extends Disposable implements ITaskSer
 						readTasksMap.set(taskKey, customized[configuration]);
 					}
 				}
+				console.log('read tasks', folderToTasksMap.size, workspaceToTaskMap.size);
 			}
 		}
 		await readTasks(this, folderToTasksMap, false);
 		await readTasks(this, workspaceToTaskMap, true);
+		console.log('stored tasks', JSON.stringify(storedTasks.keys));
+		console.log('task map', JSON.stringify(readTasksMap.keys));
 		for (const key of storedTasks.keys()) {
+			console.log('checking read tasks', readTasksMap.size);
+			console.log('read tasks has key', readTasksMap.has(key), key);
 			if (readTasksMap.has(key)) {
 				tasks.push(readTasksMap.get(key)!);
 			}
@@ -1114,6 +1120,7 @@ export abstract class AbstractTaskService extends Disposable implements ITaskSer
 				}
 			}
 			if (!task.configurationProperties.isBackground) {
+				console.log('task is not background, returning', task._label);
 				return;
 			}
 			this._getTasksFromStorage('persistent').set(key, JSON.stringify(customizations));
@@ -1130,6 +1137,7 @@ export abstract class AbstractTaskService extends Disposable implements ITaskSer
 		for (const key of keys) {
 			keyValues.push([key, this._persistentTasks.get(key, Touch.None)!]);
 		}
+		console.log(keyValues.map(k => k[0]));
 		this._storageService.store(AbstractTaskService.PersistentTasks_Key, JSON.stringify(keyValues), StorageScope.WORKSPACE, StorageTarget.USER);
 	}
 
