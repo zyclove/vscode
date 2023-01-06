@@ -1458,6 +1458,7 @@ export class TerminalTaskSystem extends Disposable implements ITaskSystem {
 			if (task.command.presentation && task.command.presentation.clear) {
 				terminalToReuse.terminal.clearBuffer();
 			}
+			terminalToReuse.terminal.shellLaunchConfig.reconnectionProperties = { ownerId: ReconnectionType, data: { lastTask: task.getCommonTaskId(), group, label: task._label, id: task._id } };
 			this._terminals[terminalToReuse.terminal.instanceId.toString()].lastTask = taskKey;
 			return [terminalToReuse.terminal, undefined];
 		}
