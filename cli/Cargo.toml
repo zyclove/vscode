@@ -49,6 +49,7 @@ log = "0.4"
 const_format = "0.2"
 sha2 = "0.10"
 base64 = "0.13"
+async-recursion = "1.0"
 
 [build-dependencies]
 serde = { version = "1.0" }
