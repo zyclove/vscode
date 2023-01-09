@@ -1342,6 +1342,8 @@ export class TerminalTaskSystem extends Disposable implements ITaskSystem {
 	}
 
 	private _reconnectToTerminals(): void {
+		console.log('reconnected terminals', this._reconnectedTerminals?.map(t => `${t.instanceId} ${t.shellLaunchConfig.attachPersistentProcess?.reconnectionProperties?.data}`));
+		console.log('has reconnected', this._hasReconnected);
 		if (this._hasReconnected) {
 			this._logService.trace(`Already reconnected, to ${this._reconnectedTerminals?.length} terminals so returning`);
 			return;

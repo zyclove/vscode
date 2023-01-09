@@ -1043,6 +1043,7 @@ export abstract class AbstractTaskService extends Disposable implements ITaskSer
 
 	public removePersistentTask(key: string) {
 		if (this._getTasksFromStorage('persistent').has(key)) {
+			console.log('remove persistent task', key);
 			this._getTasksFromStorage('persistent').delete(key);
 			this._savePersistentTasks();
 		}
@@ -1116,6 +1117,7 @@ export abstract class AbstractTaskService extends Disposable implements ITaskSer
 			if (!task.configurationProperties.isBackground) {
 				return;
 			}
+			console.log('set persistent task', key);
 			this._getTasksFromStorage('persistent').set(key, JSON.stringify(customizations));
 			this._savePersistentTasks();
 		}
