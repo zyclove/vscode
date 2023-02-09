@@ -159,6 +159,8 @@ export class InlineCompletionsHoverParticipant implements IEditorHoverParticipan
 			const inlineSuggestionAvailable = nls.localize('inlineSuggestionFollows', "Suggestion:");
 			const renderedContents = disposableStore.add(renderer.render(new MarkdownString().appendText(inlineSuggestionAvailable).appendCodeblock('text', code)));
 			hoverContentsElement.replaceChildren(renderedContents.element);
+			hoverContentsElement.setAttribute('role', 'alert');
+			hoverContentsElement.setAttribute('aria-live', 'assertive');
 		};
 
 		const ghostText = part.controller.activeModel?.inlineCompletionsModel?.ghostText;
