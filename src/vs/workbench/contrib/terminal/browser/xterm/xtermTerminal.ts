@@ -812,6 +812,7 @@ class AccessibleBuffer extends DisposableStore {
 		// The viewport is undefined when this is focused, so we cannot get the cell height from that. Instead, estimate using the font.
 		const lineHeight = this._font?.charHeight ? this._font.charHeight * this._font.lineHeight + 'px' : '';
 		this._accessibleBuffer.style.lineHeight = lineHeight;
+		this._accessibleBuffer.setAttribute('role', 'presentation');
 		const commands = this._capabilities.get(TerminalCapability.CommandDetection)?.commands;
 		if (!commands?.length) {
 			const noContent = document.createElement('div');
@@ -831,25 +832,37 @@ class AccessibleBuffer extends DisposableStore {
 			if (command.exitCode !== 0) {
 				header.textContent += ` exited with code ${command.exitCode}`;
 			}
-			const output = document.createElement('div');
-			// without this, the text area gets focused when keyboard shortcuts are used
-			output.tabIndex = -1;
-			output.textContent = command.getOutput()?.replace(new RegExp(' ', 'g'), '\xA0') || '';
-			if (replaceChildren) {
-				this._bufferElementFragment.replaceChildren(header, output);
+			const outputElts = [];
+			let output;
+			const outputLines = command.getOutput()?.split('\n');
+			if (outputLines) {
+				for (const line of outputLines) {
+					output = document.createElement('div');
+					// without this, the text area gets focused when keyboard shortcuts are used
+					output.tabIndex = -1;
+					output.textContent = line.replace(new RegExp(' ', 'g'), '\xA0') || '';
+					outputElts.push(output);
+				}
+			}
+
+			if (replaceChildren && output) {
+				this._bufferElementFragment.replaceChildren(header, ...outputElts);
 				replaceChildren = false;
 			} else {
 				this._bufferElementFragment.appendChild(header);
-				this._bufferElementFragment.appendChild(output);
+				for (const output of outputElts) {
+					this._bufferElementFragment.appendChild(output);
+				}
 			}
 		}
 		this._accessibleBuffer.focus();
+		this._accessibleBuffer.style.userSelect = 'text';
 		if (this._accessibleBuffer.contentEditable === 'true') {
 			document.execCommand('selectAll', false, undefined);
 			document.getSelection()?.collapseToEnd();
 		} else if (header) {
 			// focus the cursor line's header
-			header.tabIndex = 0;
+			// header.tabIndex = 0;
 		}
 		return this._bufferElementFragment;
 	}
