@@ -22,6 +22,7 @@ import { RenderLineInput, renderViewLine } from 'vs/editor/common/viewLayout/vie
 import { InlineDecorationType } from 'vs/editor/common/viewModel';
 import { GhostTextReplacement, GhostTextWidgetModel } from 'vs/editor/contrib/inlineCompletions/browser/ghostText';
 import { IInstantiationService } from 'vs/platform/instantiation/common/instantiation';
+import { debounce } from 'vs/base/common/decorators';
 
 const ttPolicy = window.trustedTypes?.createPolicy('editorGhostText', { createHTML: value => value });
 
@@ -276,12 +277,13 @@ class DecorationsWidget implements IDisposable {
 			const ghostTextElt = document.querySelector('.ghost-text-decoration');
 			const content = ghostTextElt?.textContent;
 			if (content) {
-				console.log('content', content);
-				ghostTextElt.setAttribute('aria-live', 'assertive');
-				ghostTextElt.setAttribute('role', 'alert');
-				ghostTextElt.setAttribute('aria-label', content);
-				console.log(ghostTextElt);
-				this.editor.setAriaOptions({ activeDescendant: undefined });
+				this._alert(content);
+				// console.log('content', content);
+				// ghostTextElt.setAttribute('aria-live', 'assertive');
+				// ghostTextElt.setAttribute('role', 'alert');
+				// ghostTextElt.setAttribute('aria-label', content);
+				// console.log(ghostTextElt);
+				// this.editor.setAriaOptions({ activeDescendant: undefined });
 			}
 			this.decorationIds = accessor.deltaDecorations(this.decorationIds, parts.map<IModelDeltaDecoration>(p => {
 				return ({
@@ -294,6 +296,11 @@ class DecorationsWidget implements IDisposable {
 				});
 			}).concat(hiddenTextDecorations));
 		});
+	}
+
+	@debounce(500)
+	private _alert(content: string): void {
+		alert(`Suggestion: ${content}`);
 	}
 }
 
