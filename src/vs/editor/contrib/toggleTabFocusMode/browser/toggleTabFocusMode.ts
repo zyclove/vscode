@@ -5,11 +5,11 @@
 
 import { alert } from 'vs/base/browser/ui/aria/aria';
 import { KeyCode, KeyMod } from 'vs/base/common/keyCodes';
-import { TabFocus } from 'vs/editor/browser/config/tabFocus';
 import { ServicesAccessor } from 'vs/editor/browser/editorExtensions';
 import * as nls from 'vs/nls';
 import { Action2, registerAction2 } from 'vs/platform/actions/common/actions';
 import { KeybindingWeight } from 'vs/platform/keybinding/common/keybindingsRegistry';
+import { IEditorService } from 'vs/workbench/services/editor/common/editorService';
 
 export class ToggleTabFocusModeAction extends Action2 {
 
@@ -29,9 +29,10 @@ export class ToggleTabFocusModeAction extends Action2 {
 	}
 
 	public run(accessor: ServicesAccessor): void {
-		const oldValue = TabFocus.getTabFocusMode();
+		const editorService = accessor.get(IEditorService);
+		const oldValue = editorService.tabFocus.getTabFocusMode();
 		const newValue = !oldValue;
-		TabFocus.setTabFocusMode(newValue);
+		editorService.tabFocus.setTabFocusMode(newValue);
 		if (newValue) {
 			alert(nls.localize('toggle.tabMovesFocus.on', "Pressing Tab will now move focus to the next focusable element"));
 		} else {

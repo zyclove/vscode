@@ -12,6 +12,7 @@ import { IEditor, IDiffEditor } from 'vs/editor/common/editorCommon';
 import { ICloseEditorOptions, IEditorGroup, isEditorGroup } from 'vs/workbench/services/editor/common/editorGroupsService';
 import { URI } from 'vs/base/common/uri';
 import { IGroupModelChangeEvent } from 'vs/workbench/common/editor/editorGroupModel';
+import { TabFocusImpl } from 'vs/base/browser/tabFocus';
 
 export const IEditorService = createDecorator<IEditorService>('editorService');
 
@@ -189,6 +190,12 @@ export interface IEditorService {
 	 * The total number of editors that are opened either inactive or active.
 	 */
 	readonly count: number;
+
+
+	/**
+	 * The tab focus element
+	 */
+	readonly tabFocus: TabFocusImpl;
 
 	/**
 	 * All editors that are opened across all editor groups with their group

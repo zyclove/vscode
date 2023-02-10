@@ -25,6 +25,7 @@ import { CommentContextKeys } from 'vs/workbench/contrib/comments/common/comment
 import { ILanguageConfigurationService } from 'vs/editor/common/languages/languageConfigurationRegistry';
 import { ILanguageFeaturesService } from 'vs/editor/common/services/languageFeatures';
 import { IConfigurationService } from 'vs/platform/configuration/common/configuration';
+import { IEditorService } from 'vs/workbench/services/editor/common/editorService';
 
 export const ctxCommentEditorFocused = new RawContextKey<boolean>('commentEditorFocused', false);
 
@@ -47,6 +48,7 @@ export class SimpleCommentEditor extends CodeEditorWidget {
 		@IAccessibilityService accessibilityService: IAccessibilityService,
 		@ILanguageConfigurationService languageConfigurationService: ILanguageConfigurationService,
 		@ILanguageFeaturesService languageFeaturesService: ILanguageFeaturesService,
+		@IEditorService editorService: IEditorService
 	) {
 		const codeEditorWidgetOptions: ICodeEditorWidgetOptions = {
 			contributions: <IEditorContributionDescription[]>[
@@ -58,7 +60,7 @@ export class SimpleCommentEditor extends CodeEditorWidget {
 			]
 		};
 
-		super(domElement, options, codeEditorWidgetOptions, instantiationService, codeEditorService, commandService, contextKeyService, themeService, notificationService, accessibilityService, languageConfigurationService, languageFeaturesService);
+		super(domElement, options, codeEditorWidgetOptions, instantiationService, codeEditorService, commandService, contextKeyService, themeService, notificationService, accessibilityService, languageConfigurationService, languageFeaturesService, editorService);
 
 		this._commentEditorFocused = ctxCommentEditorFocused.bindTo(contextKeyService);
 		this._commentEditorEmpty = CommentContextKeys.commentIsEmpty.bindTo(contextKeyService);

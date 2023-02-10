@@ -165,6 +165,7 @@ import { IUserDataProfileService } from 'vs/workbench/services/userDataProfile/c
 import { EnablementState, IExtensionManagementServer, IScannedExtension, IWebExtensionsScannerService, IWorkbenchExtensionEnablementService, IWorkbenchExtensionManagementService } from 'vs/workbench/services/extensionManagement/common/extensionManagement';
 import { InstallVSIXOptions, ILocalExtension, IGalleryExtension, InstallOptions, IExtensionIdentifier, UninstallOptions, IExtensionsControlManifest, IGalleryMetadata, IExtensionManagementParticipant, Metadata } from 'vs/platform/extensionManagement/common/extensionManagement';
 import { Codicon } from 'vs/base/common/codicons';
+import { TabFocusImpl } from 'vs/base/browser/tabFocus';
 
 export function createFileEditorInput(instantiationService: IInstantiationService, resource: URI): FileEditorInput {
 	return instantiationService.createInstance(FileEditorInput, resource, undefined, undefined, undefined, undefined, undefined, undefined);
@@ -944,7 +945,7 @@ export class TestEditorService implements EditorServiceImpl {
 	private _activeEditor: EditorInput | undefined;
 	public get activeEditor(): EditorInput | undefined { return this._activeEditor; }
 	public set activeEditor(value: EditorInput | undefined) { this._activeEditor = value; }
-
+	tabFocus: TabFocusImpl = new TabFocusImpl('id', new TestConfigurationService());
 	editors: readonly EditorInput[] = [];
 	mostRecentlyActiveEditors: readonly IEditorIdentifier[] = [];
 	visibleEditorPanes: readonly IVisibleEditorPane[] = [];

@@ -108,6 +108,8 @@ export class TerminalService implements ITerminalService {
 
 	private readonly _onDidChangeActiveGroup = new Emitter<ITerminalGroup | undefined>();
 	get onDidChangeActiveGroup(): Event<ITerminalGroup | undefined> { return this._onDidChangeActiveGroup.event; }
+	private readonly _onDidChangeTabFocus = new Emitter<void>();
+	get onDidChangeTabFocus(): Event<void> { return this._onDidChangeTabFocus.event; }
 	private readonly _onDidCreateInstance = new Emitter<ITerminalInstance>();
 	get onDidCreateInstance(): Event<ITerminalInstance> { return this._onDidCreateInstance.event; }
 	private readonly _onDidDisposeInstance = new Emitter<ITerminalInstance>();
@@ -180,6 +182,7 @@ export class TerminalService implements ITerminalService {
 		this._terminalInstanceService.onDidCreateInstance(instance => {
 			instance.setEscapeSequenceLogging(this._escapeSequenceLoggingEnabled);
 			this._initInstanceListeners(instance);
+			instance.onDidChangeTabFocus(() => this._onDidChangeTabFocus.fire());
 			this._onDidCreateInstance.fire(instance);
 		});
 

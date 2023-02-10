@@ -4,12 +4,23 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Emitter, Event } from 'vs/base/common/event';
+import { IConfigurationService } from 'vs/platform/configuration/common/configuration';
 
-class TabFocusImpl {
-	private _tabFocus: boolean = false;
+export class TabFocusImpl {
+	private _tabFocus: boolean;
 
 	private readonly _onDidChangeTabFocus = new Emitter<boolean>();
 	public readonly onDidChangeTabFocus: Event<boolean> = this._onDidChangeTabFocus.event;
+
+	constructor(settingId: string, @IConfigurationService configurationService: IConfigurationService) {
+		this._tabFocus = configurationService.getValue(settingId);
+		configurationService.onDidChangeConfiguration(e => {
+			if (e.affectsConfiguration(settingId)) {
+				this.setTabFocusMode(configurationService.getValue(settingId));
+			}
+		});
+		this._onDidChangeTabFocus.fire(this.getTabFocusMode());
+	}
 
 	public getTabFocusMode(): boolean {
 		return this._tabFocus;
@@ -24,11 +35,3 @@ class TabFocusImpl {
 		this._onDidChangeTabFocus.fire(this._tabFocus);
 	}
 }
-
-/**
- * Control what pressing Tab does.
- * If it is false, pressing Tab or Shift-Tab will be handled by the editor.
- * If it is true, pressing Tab or Shift-Tab will move the browser focus.
- * Defaults to false.
- */
-export const TabFocus = new TabFocusImpl();

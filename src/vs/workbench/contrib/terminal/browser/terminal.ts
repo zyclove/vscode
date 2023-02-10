@@ -2,6 +2,7 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
+import { TabFocusImpl } from 'vs/base/browser/tabFocus';
 import { Orientation } from 'vs/base/browser/ui/splitview/splitview';
 import { Event } from 'vs/base/common/event';
 import { Lazy } from 'vs/base/common/lazy';
@@ -136,6 +137,7 @@ export interface ITerminalService extends ITerminalInstanceHost {
 	readonly connectionState: TerminalConnectionState;
 	readonly defaultLocation: TerminalLocation;
 
+	onDidChangeTabFocus: Event<void>;
 	onDidChangeActiveGroup: Event<ITerminalGroup | undefined>;
 	onDidDisposeGroup: Event<ITerminalGroup>;
 	onDidCreateInstance: Event<ITerminalInstance>;
@@ -452,6 +454,7 @@ export interface ITerminalInstance {
 	readonly os?: OperatingSystem;
 	readonly capabilities: ITerminalCapabilityStore;
 	readonly usedShellIntegrationInjection: boolean;
+	readonly tabFocus: TabFocusImpl;
 
 	readonly statusList: ITerminalStatusList;
 
@@ -533,6 +536,7 @@ export interface ITerminalInstance {
 	onDimensionsChanged: Event<void>;
 	onMaximumDimensionsChanged: Event<void>;
 	onDidChangeHasChildProcesses: Event<boolean>;
+	onDidChangeTabFocus: Event<void>;
 
 	onDidFocus: Event<ITerminalInstance>;
 	onDidBlur: Event<ITerminalInstance>;

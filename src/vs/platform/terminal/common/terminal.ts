@@ -83,6 +83,7 @@ export const enum TerminalSettingId {
 	EnableBell = 'terminal.integrated.enableBell',
 	CommandsToSkipShell = 'terminal.integrated.commandsToSkipShell',
 	AllowChords = 'terminal.integrated.allowChords',
+	TabFocusMode = 'terminal.integrated.tabFocusMode',
 	AllowMnemonics = 'terminal.integrated.allowMnemonics',
 	EnvMacOs = 'terminal.integrated.env.osx',
 	EnvLinux = 'terminal.integrated.env.linux',

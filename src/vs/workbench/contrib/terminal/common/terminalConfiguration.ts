@@ -56,6 +56,11 @@ const terminalConfiguration: IConfigurationNode = {
 			type: 'boolean',
 			default: true,
 		},
+		[TerminalSettingId.TabFocusMode]: {
+			description: localize('tabFocusMode', "Controls whether the editor receive tabs or defer them to the workbench for navigation."),
+			type: 'boolean',
+			default: false
+		},
 		[TerminalSettingId.TabsEnableAnimation]: {
 			description: localize('terminal.integrated.tabs.enableAnimation', 'Controls whether terminal tab statuses support animation (eg. in progress tasks).'),
 			type: 'boolean',

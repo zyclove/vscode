@@ -60,6 +60,7 @@ import { IEditorConfiguration } from 'vs/editor/common/config/editorConfiguratio
 import { IDimension } from 'vs/editor/common/core/dimension';
 import { ILanguageFeaturesService } from 'vs/editor/common/services/languageFeatures';
 import { CodeEditorContributions } from 'vs/editor/browser/widget/codeEditorContributions';
+import { IEditorService } from 'vs/workbench/services/editor/common/editorService';
 
 let EDITOR_ID = 0;
 
@@ -282,6 +283,7 @@ export class CodeEditorWidget extends Disposable implements editorBrowser.ICodeE
 		@IAccessibilityService accessibilityService: IAccessibilityService,
 		@ILanguageConfigurationService private readonly languageConfigurationService: ILanguageConfigurationService,
 		@ILanguageFeaturesService languageFeaturesService: ILanguageFeaturesService,
+		@IEditorService editorService: IEditorService
 	) {
 		super();
 
@@ -295,7 +297,7 @@ export class CodeEditorWidget extends Disposable implements editorBrowser.ICodeE
 		this._decorationTypeSubtypes = {};
 		this._telemetryData = codeEditorWidgetOptions.telemetryData;
 
-		this._configuration = this._register(this._createConfiguration(codeEditorWidgetOptions.isSimpleWidget || false, options, accessibilityService));
+		this._configuration = this._register(this._createConfiguration(codeEditorWidgetOptions.isSimpleWidget || false, options, accessibilityService, editorService));
 		this._register(this._configuration.onDidChange((e) => {
 			this._onDidChangeConfiguration.fire(e);
 
@@ -402,8 +404,8 @@ export class CodeEditorWidget extends Disposable implements editorBrowser.ICodeE
 		this._modelData?.view.writeScreenReaderContent(reason);
 	}
 
-	protected _createConfiguration(isSimpleWidget: boolean, options: Readonly<IEditorConstructionOptions>, accessibilityService: IAccessibilityService): EditorConfiguration {
-		return new EditorConfiguration(isSimpleWidget, options, this._domElement, accessibilityService);
+	protected _createConfiguration(isSimpleWidget: boolean, options: Readonly<IEditorConstructionOptions>, accessibilityService: IAccessibilityService, editorService: IEditorService): EditorConfiguration {
+		return new EditorConfiguration(isSimpleWidget, options, this._domElement, accessibilityService, editorService);
 	}
 
 	public getId(): string {

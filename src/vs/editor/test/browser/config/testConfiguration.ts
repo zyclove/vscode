@@ -8,11 +8,12 @@ import { EditorFontLigatures, EditorFontVariations, IEditorOptions } from 'vs/ed
 import { BareFontInfo, FontInfo } from 'vs/editor/common/config/fontInfo';
 import { AccessibilitySupport } from 'vs/platform/accessibility/common/accessibility';
 import { TestAccessibilityService } from 'vs/platform/accessibility/test/common/testAccessibilityService';
+import { TestEditorService } from 'vs/workbench/test/browser/workbenchTestServices';
 
 export class TestConfiguration extends EditorConfiguration {
 
 	constructor(opts: IEditorOptions) {
-		super(false, opts, null, new TestAccessibilityService());
+		super(false, opts, null, new TestAccessibilityService(), new TestEditorService());
 	}
 
 	protected override _readEnvConfiguration(): IEnvConfiguration {

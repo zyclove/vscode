@@ -12,13 +12,13 @@ import * as platform from 'vs/base/common/platform';
 import { ElementSizeObserver } from 'vs/editor/browser/config/elementSizeObserver';
 import { FontMeasurements } from 'vs/editor/browser/config/fontMeasurements';
 import { migrateOptions } from 'vs/editor/browser/config/migrateOptions';
-import { TabFocus } from 'vs/editor/browser/config/tabFocus';
 import { ComputeOptionsMemory, ConfigurationChangedEvent, EditorOption, editorOptionsRegistry, FindComputedEditorOptionValueById, IComputedEditorOptions, IEditorOptions, IEnvironmentalOptions } from 'vs/editor/common/config/editorOptions';
 import { EditorZoom } from 'vs/editor/common/config/editorZoom';
 import { BareFontInfo, FontInfo, IValidatedEditorOptions } from 'vs/editor/common/config/fontInfo';
 import { IDimension } from 'vs/editor/common/core/dimension';
 import { IEditorConfiguration } from 'vs/editor/common/config/editorConfiguration';
 import { AccessibilitySupport, IAccessibilityService } from 'vs/platform/accessibility/common/accessibility';
+import { IEditorService } from 'vs/workbench/services/editor/common/editorService';
 
 export interface IEditorConstructionOptions extends IEditorOptions {
 	/**
@@ -66,7 +66,8 @@ export class EditorConfiguration extends Disposable implements IEditorConfigurat
 		isSimpleWidget: boolean,
 		options: Readonly<IEditorConstructionOptions>,
 		container: HTMLElement | null,
-		@IAccessibilityService private readonly _accessibilityService: IAccessibilityService
+		@IAccessibilityService private readonly _accessibilityService: IAccessibilityService,
+		@IEditorService private readonly _editorService: IEditorService
 	) {
 		super();
 		this.isSimpleWidget = isSimpleWidget;
@@ -81,7 +82,7 @@ export class EditorConfiguration extends Disposable implements IEditorConfigurat
 		}
 
 		this._register(EditorZoom.onDidChangeZoomLevel(() => this._recomputeOptions()));
-		this._register(TabFocus.onDidChangeTabFocus(() => this._recomputeOptions()));
+		this._register(this._editorService.tabFocus.onDidChangeTabFocus(() => this._recomputeOptions()));
 		this._register(this._containerObserver.onDidChange(() => this._recomputeOptions()));
 		this._register(FontMeasurements.onDidChange(() => this._recomputeOptions()));
 		this._register(browser.PixelRatio.onDidChange(() => this._recomputeOptions()));
@@ -116,7 +117,7 @@ export class EditorConfiguration extends Disposable implements IEditorConfigurat
 			lineNumbersDigitCount: this._lineNumbersDigitCount,
 			emptySelectionClipboard: partialEnv.emptySelectionClipboard,
 			pixelRatio: partialEnv.pixelRatio,
-			tabFocusMode: TabFocus.getTabFocusMode(),
+			tabFocusMode: this._editorService.tabFocus.getTabFocusMode(),
 			accessibilitySupport: partialEnv.accessibilitySupport
 		};
 		return EditorOptionsUtil.computeOptions(this._validatedOptions, env);

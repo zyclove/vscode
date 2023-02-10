@@ -5195,6 +5195,7 @@ export const EditorOptions = {
 		EditorOption.formatOnPaste, 'formatOnPaste', false,
 		{ description: nls.localize('formatOnPaste', "Controls whether the editor should automatically format the pasted content. A formatter must be available and the formatter should be able to format a range in a document.") }
 	)),
+	tabFocusMode: register(new EditorTabFocusMode()),
 	formatOnType: register(new EditorBooleanOption(
 		EditorOption.formatOnType, 'formatOnType', false,
 		{ description: nls.localize('formatOnType', "Controls whether the editor should automatically format the line after typing.") }
@@ -5619,7 +5620,6 @@ export const EditorOptions = {
 	// Leave these at the end (because they have dependencies!)
 	editorClassName: register(new EditorClassName()),
 	pixelRatio: register(new EditorPixelRatio()),
-	tabFocusMode: register(new EditorTabFocusMode()),
 	layoutInfo: register(new EditorLayoutInfoComputer()),
 	wrappingInfo: register(new EditorWrappingInfoComputer()),
 	wrappingIndent: register(new WrappingIndentOption()),

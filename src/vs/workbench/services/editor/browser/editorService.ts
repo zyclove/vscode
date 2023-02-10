@@ -33,6 +33,7 @@ import { IWorkspaceTrustRequestService, WorkspaceTrustUriResponse } from 'vs/pla
 import { IHostService } from 'vs/workbench/services/host/browser/host';
 import { findGroup } from 'vs/workbench/services/editor/common/editorGroupFinder';
 import { ITextEditorService } from 'vs/workbench/services/textfile/common/textEditorService';
+import { TabFocusImpl } from 'vs/base/browser/tabFocus';
 
 export class EditorService extends Disposable implements EditorServiceImpl {
 
@@ -389,8 +390,8 @@ export class EditorService extends Disposable implements EditorServiceImpl {
 	//#endregion
 
 	//#region Editor accessors
-
 	private readonly editorsObserver = this._register(this.instantiationService.createInstance(EditorsObserver));
+	private _tabFocus = this.instantiationService.createInstance(TabFocusImpl, 'editor.tabFocusMode');
 
 	get activeEditorPane(): IVisibleEditorPane | undefined {
 		return this.editorGroupService.activeGroup?.activeEditorPane;
@@ -422,6 +423,10 @@ export class EditorService extends Disposable implements EditorServiceImpl {
 		}
 
 		return activeCodeEditor?.getModel()?.getLanguageId();
+	}
+
+	get tabFocus(): TabFocusImpl {
+		return this._tabFocus;
 	}
 
 	get count(): number {

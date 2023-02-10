@@ -25,7 +25,6 @@ import { isMacintosh, isWindows, OperatingSystem, OS } from 'vs/base/common/plat
 import { ScrollbarVisibility } from 'vs/base/common/scrollable';
 import { withNullAsUndefined } from 'vs/base/common/types';
 import { URI } from 'vs/base/common/uri';
-import { TabFocus } from 'vs/editor/browser/config/tabFocus';
 import { FindReplaceState } from 'vs/editor/contrib/find/browser/findState';
 import * as nls from 'vs/nls';
 import { IAccessibilityService } from 'vs/platform/accessibility/common/accessibility';
@@ -97,6 +96,7 @@ import { Widget } from 'vs/base/browser/ui/widget';
 import { FastDomNode, createFastDomNode } from 'vs/base/browser/fastDomNode';
 import { ISimpleSelectedSuggestion } from 'vs/workbench/services/suggest/browser/simpleSuggestWidget';
 import { MarkdownRenderer } from 'vs/editor/contrib/markdownRenderer/browser/markdownRenderer';
+import { TabFocusImpl } from 'vs/base/browser/tabFocus';
 
 const enum Constants {
 	/**
@@ -221,6 +221,10 @@ export class TerminalInstance extends Disposable implements ITerminalInstance {
 
 	readonly capabilities = new TerminalCapabilityStoreMultiplexer();
 	readonly statusList: ITerminalStatusList;
+
+	private _tabFocus: TabFocusImpl;
+
+	get tabFocus(): TabFocusImpl { return this._tabFocus; }
 
 	/**
 	 * Enables opening the contextual actions, if any, that are available
@@ -368,6 +372,8 @@ export class TerminalInstance extends Disposable implements ITerminalInstance {
 	readonly onDidChangeFindResults = this._onDidChangeFindResults.event;
 	private readonly _onDidFocusFindWidget = new Emitter<void>();
 	readonly onDidFocusFindWidget = this._onDidFocusFindWidget.event;
+	private readonly _onDidChangeTabFocus = new Emitter<void>();
+	get onDidChangeTabFocus(): Event<void> { return this._onDidChangeTabFocus.event; }
 
 	constructor(
 		private readonly _terminalShellTypeContextKey: IContextKey<string>,
@@ -417,6 +423,8 @@ export class TerminalInstance extends Disposable implements ITerminalInstance {
 		this._hasHadInput = false;
 		this._fixedRows = _shellLaunchConfig.attachPersistentProcess?.fixedDimensions?.rows;
 		this._fixedCols = _shellLaunchConfig.attachPersistentProcess?.fixedDimensions?.cols;
+
+		this._tabFocus = instantiationService.createInstance(TabFocusImpl, TerminalSettingId.TabFocusMode);
 
 		// the resource is already set when it's been moved from another window
 		this._resource = resource || getTerminalUri(this._workspaceContextService.getWorkspace().id, this.instanceId, this.title);
@@ -1025,7 +1033,7 @@ export class TerminalInstance extends Disposable implements ITerminalInstance {
 			}
 
 			// If tab focus mode is on, tab is not passed to the terminal
-			if (TabFocus.getTabFocusMode() && event.keyCode === 9) {
+			if (this._tabFocus.getTabFocusMode() && event.keyCode === 9) {
 				return false;
 			}
 

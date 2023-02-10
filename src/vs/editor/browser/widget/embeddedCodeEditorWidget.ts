@@ -20,6 +20,7 @@ import { IClipboardService } from 'vs/platform/clipboard/common/clipboardService
 import { IEditorProgressService } from 'vs/platform/progress/common/progress';
 import { ILanguageConfigurationService } from 'vs/editor/common/languages/languageConfigurationRegistry';
 import { ILanguageFeaturesService } from 'vs/editor/common/services/languageFeatures';
+import { IEditorService } from 'vs/workbench/services/editor/common/editorService';
 
 export class EmbeddedCodeEditorWidget extends CodeEditorWidget {
 
@@ -39,8 +40,9 @@ export class EmbeddedCodeEditorWidget extends CodeEditorWidget {
 		@IAccessibilityService accessibilityService: IAccessibilityService,
 		@ILanguageConfigurationService languageConfigurationService: ILanguageConfigurationService,
 		@ILanguageFeaturesService languageFeaturesService: ILanguageFeaturesService,
+		@IEditorService editorService: IEditorService
 	) {
-		super(domElement, { ...parentEditor.getRawOptions(), overflowWidgetsDomNode: parentEditor.getOverflowWidgetsDomNode() }, {}, instantiationService, codeEditorService, commandService, contextKeyService, themeService, notificationService, accessibilityService, languageConfigurationService, languageFeaturesService);
+		super(domElement, { ...parentEditor.getRawOptions(), overflowWidgetsDomNode: parentEditor.getOverflowWidgetsDomNode() }, {}, instantiationService, codeEditorService, commandService, contextKeyService, themeService, notificationService, accessibilityService, languageConfigurationService, languageFeaturesService, editorService);
 
 		this._parentEditor = parentEditor;
 		this._overwriteOptions = options;
