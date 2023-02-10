@@ -273,6 +273,16 @@ class DecorationsWidget implements IDisposable {
 
 		// Using change decorations ensures that we update the id's before some event handler is called.
 		this.editor.changeDecorations(accessor => {
+			const ghostTextElt = document.querySelector('.ghost-text-decoration');
+			const content = ghostTextElt?.textContent;
+			if (content) {
+				console.log('content', content);
+				ghostTextElt.setAttribute('aria-live', 'assertive');
+				ghostTextElt.setAttribute('role', 'alert');
+				ghostTextElt.setAttribute('aria-label', content);
+				console.log(ghostTextElt);
+				this.editor.setAriaOptions({ activeDescendant: undefined });
+			}
 			this.decorationIds = accessor.deltaDecorations(this.decorationIds, parts.map<IModelDeltaDecoration>(p => {
 				return ({
 					range: Range.fromPositions(new Position(lineNumber, p.column)),
@@ -399,6 +409,16 @@ function renderLines(domNode: HTMLElement, tabSize: number, lines: LineData[], o
 	const html = sb.build();
 	const trustedhtml = ttPolicy ? ttPolicy.createHTML(html) : html;
 	domNode.innerHTML = trustedhtml as string;
+
+	domNode.ariaLabel = document.querySelector('.ghost-text-decoration')?.textContent || 'no content';
+	console.log('ariaLabel', domNode.ariaLabel);
+	console.log(domNode);
+	domNode.querySelector('.ghost-text-decoration')?.setAttribute('aria-live', 'assertive');
+	domNode.querySelector('.ghost-text-decoration')?.setAttribute('role', 'alert');
+	document.querySelector('.ghost-text-decoration')?.setAttribute('aria-live', 'assertive');
+	document.querySelector('.ghost-text-decoration')?.setAttribute('role', 'alert');
+	console.log(document.querySelector('.ghost-text-decoration'));
+	domNode.focus();
 }
 
 class ViewMoreLinesContentWidget extends Disposable implements IContentWidget {
