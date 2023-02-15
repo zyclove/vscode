@@ -1302,6 +1302,48 @@ export class DocumentSymbol {
 	}
 }
 
+// --- sticky scroll ---
+@es5ClassCompat
+export class StickyRange {
+
+	beginningLineNumber: number;
+	endLineNumber: number;
+
+	constructor(beginningLineNumber: number, endLineNumber: number) {
+		this.beginningLineNumber = beginningLineNumber;
+		this.endLineNumber = endLineNumber;
+	}
+}
+
+@es5ClassCompat
+export class StickyOutlineElement {
+
+	static validate(candidate: StickyOutlineElement): void {
+		if (candidate.range && candidate.range.beginningLineNumber < candidate.range.endLineNumber) {
+			throw new Error('The beginning line number must be on or after the end line number');
+		}
+		if (candidate.range
+			&& candidate.parent.range
+			&& (candidate.range.beginningLineNumber < candidate.parent.range.beginningLineNumber
+				|| candidate.range.endLineNumber > candidate.parent.range.endLineNumber)) {
+			throw new Error('Th beginning line number must be on or after the end line number');
+		}
+		candidate.children?.forEach(StickyOutlineElement.validate);
+	}
+
+	range: StickyRange;
+	children: StickyOutlineElement[];
+	parent: StickyOutlineElement;
+
+	constructor(range: StickyRange, children: StickyOutlineElement[], parent: StickyOutlineElement) {
+		this.range = range;
+		this.children = children;
+		this.parent = parent;
+
+		StickyOutlineElement.validate(this);
+	}
+}
+// --- sticky scroll ---
 
 export enum CodeActionTriggerKind {
 	Invoke = 1,

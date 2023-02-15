@@ -7102,6 +7102,27 @@ declare namespace monaco.languages {
 		provideDocumentSymbols(model: editor.ITextModel, token: CancellationToken): ProviderResult<DocumentSymbol[]>;
 	}
 
+	export interface StickyRange {
+		startLineNumber: number;
+		endLineNumber: number;
+	}
+
+	export interface StickyOutlineElement {
+		range: StickyRange | undefined;
+		children: StickyOutlineElement[];
+		parent: StickyOutlineElement | undefined;
+	}
+
+	/**
+	 * The sticky scroll provider interface defines the contract between extensions and the sticky scroll feature
+	*/
+	export interface StickyScrollProvider {
+		/**
+		 * Provider sticky scroll information for the given document
+		 */
+		provideStickyScrollOutlineModel(model: editor.ITextModel, token: CancellationToken): ProviderResult<StickyOutlineElement>;
+	}
+
 	export interface TextEdit {
 		range: IRange;
 		text: string;

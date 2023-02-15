@@ -168,6 +168,17 @@ export class MainThreadLanguageFeatures extends Disposable implements MainThread
 		}));
 	}
 
+	// --- sticky scroll
+
+	$registerStickyScrollProvider(handle: number, selector: IDocumentFilterDto[], displayName: string): void {
+		this._registrations.set(handle, this._languageFeaturesService.stickyScrollProvider.register(selector, <languages.StickyScrollProvider>{
+			displayName,
+			provideStickyScrollOutlineModel: (model: ITextModel, token: CancellationToken): Promise<languages.StickyOutlineElement | undefined> => {
+				return this._proxy.$provideStickyScrollOutlineModel(handle, model.uri, token);
+			}
+		}));
+	}
+
 	// --- code lens
 
 	$registerCodeLensSupport(handle: number, selector: IDocumentFilterDto[], eventHandle: number | undefined): void {

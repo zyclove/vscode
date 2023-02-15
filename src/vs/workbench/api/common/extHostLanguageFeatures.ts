@@ -7,7 +7,7 @@ import { URI, UriComponents } from 'vs/base/common/uri';
 import { mixin } from 'vs/base/common/objects';
 import type * as vscode from 'vscode';
 import * as typeConvert from 'vs/workbench/api/common/extHostTypeConverters';
-import { Range, Disposable, CompletionList, SnippetString, CodeActionKind, SymbolInformation, DocumentSymbol, SemanticTokensEdits, SemanticTokens, SemanticTokensEdit, Location, InlineCompletionTriggerKind } from 'vs/workbench/api/common/extHostTypes';
+import { Range, Disposable, CompletionList, SnippetString, CodeActionKind, SymbolInformation, DocumentSymbol, StickyOutlineElement, SemanticTokensEdits, SemanticTokens, SemanticTokensEdit, Location, InlineCompletionTriggerKind } from 'vs/workbench/api/common/extHostTypes';
 import { ISingleEditOperation } from 'vs/editor/common/core/editOperation';
 import * as languages from 'vs/editor/common/languages';
 import { ExtHostDocuments } from 'vs/workbench/api/common/extHostDocuments';
@@ -97,6 +97,24 @@ class DocumentSymbolAdapter {
 			}
 		}
 		return res;
+	}
+}
+
+class StickyScrollAdapter {
+
+	constructor(
+		private readonly _documents: ExtHostDocuments,
+		private readonly _provider: vscode.StickyScrollProvider
+	) { }
+
+	async provideStickyScrollOutlineModel(resource: URI, token: CancellationToken): Promise<languages.StickyOutlineElement | undefined> {
+		const doc = this._documents.getDocument(resource);
+		const value = await this._provider.provideStickyScrollOutlineModel(doc, token);
+		if (isFalsyOrEmpty(value) && value === null) {
+			return undefined;
+		} else {
+			return value!;
+		}
 	}
 }
 
@@ -1722,7 +1740,7 @@ class DocumentOnDropEditAdapter {
 	}
 }
 
-type Adapter = DocumentSymbolAdapter | CodeLensAdapter | DefinitionAdapter | HoverAdapter
+type Adapter = DocumentSymbolAdapter | StickyScrollAdapter | CodeLensAdapter | DefinitionAdapter | HoverAdapter
 	| DocumentHighlightAdapter | ReferenceAdapter | CodeActionAdapter | DocumentPasteEditProvider | DocumentFormattingAdapter
 	| RangeFormattingAdapter | OnTypeFormattingAdapter | NavigateTypeAdapter | RenameAdapter
 	| CompletionsAdapter | SignatureHelpAdapter | LinkProviderAdapter | ImplementationAdapter
@@ -1836,6 +1854,19 @@ export class ExtHostLanguageFeatures implements extHostProtocol.ExtHostLanguageF
 
 	$provideDocumentSymbols(handle: number, resource: UriComponents, token: CancellationToken): Promise<languages.DocumentSymbol[] | undefined> {
 		return this._withAdapter(handle, DocumentSymbolAdapter, adapter => adapter.provideDocumentSymbols(URI.revive(resource), token), undefined, token);
+	}
+
+	// --- sticky scroll
+
+	registerStickyScrollProvider(extension: IExtensionDescription, selector: vscode.DocumentSelector, provider: vscode.StickyScrollProvider, metadata?: vscode.StickyScrollProviderMetadata): vscode.Disposable {
+		const handle = this._addNewAdapter(new StickyScrollAdapter(this._documents, provider), extension);
+		const displayName = (metadata && metadata.label) || ExtHostLanguageFeatures._extLabel(extension);
+		this._proxy.$registerStickyScrollProvider(handle, this._transformDocumentSelector(selector), displayName);
+		return this._createDisposable(handle);
+	}
+
+	$provideStickyScrollOutlineModel(handle: number, resource: UriComponents, token: CancellationToken): Promise<languages.StickyOutlineElement | undefined> {
+		return this._withAdapter(handle, StickyScrollAdapter, adapter => adapter.provideStickyScrollOutlineModel(URI.revive(resource), token), undefined, token);
 	}
 
 	// --- code lens

@@ -3319,6 +3319,77 @@ declare module 'vscode' {
 		label?: string;
 	}
 
+	// *** Sticky scroll code ***
+
+	/**
+	 * Represents the entity that can be used to represent a line range in a document
+	 */
+	export class StickyRange {
+		/**
+		 * Start line number of a range
+		 */
+		startLineNumber: number;
+		/**
+		 * End line number of a range
+		 */
+		endLineNumber: number;
+	}
+
+	/**
+	 * Represents the hierarchical structure of the sticky scroll outline model, the range can be used to define the language-specific scopes of interest
+	 * that should be displayed in sticky scroll. The model to be constructed is composed of sticky outline element.
+	 */
+	export class StickyOutlineElement {
+		/**
+		 * The range of the scope
+		 */
+		range: StickyRange | undefined;
+		/**
+		 * The children of the scope
+		 */
+		children: StickyOutlineElement[];
+		/**
+		 * The parent of the scope
+		 */
+		parent: StickyOutlineElement | undefined;
+
+		/**
+		 * Creates a new sticky outline element
+		 *
+		 * @param range Range of the scope
+		 * @param children The children outline element
+		 * @param parent The parent outline element
+		 */
+		constructor(range: StickyRange | undefined, children: StickyOutlineElement[], parent: StickyOutlineElement | undefined);
+	}
+
+	/**
+	 * The sticky scroll provider interface defines the contract between extensions and the sticky scroll feature
+	 */
+	export interface StickyScrollProvider {
+
+		/**
+		 * Provide symbol information for the given document.
+		 *
+		 * @param document The document in which the command was invoked.
+		 * @param token A cancellation token.
+		 * @return A sticky outline element which represents the hierarchical tree structure of the document scopes
+		 */
+		provideStickyScrollOutlineModel(document: TextDocument, token: CancellationToken): ProviderResult<StickyOutlineElement>;
+	}
+
+	/**
+	 * Metadata about a sticky scroll provider.
+	 */
+	export interface StickyScrollProviderMetadata {
+		/**
+		 * A human-readable string that is shown when multiple sticky outlie models show for one document.
+		 */
+		label?: string;
+	}
+
+	// *** Sticky scroll code ***
+
 	/**
 	 * The workspace symbol provider interface defines the contract between extensions and
 	 * the [symbol search](https://code.visualstudio.com/docs/editor/editingevolved#_open-symbol-by-name)-feature.

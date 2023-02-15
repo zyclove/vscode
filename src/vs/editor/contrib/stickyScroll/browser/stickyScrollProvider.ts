@@ -120,21 +120,24 @@ export class StickyLineCandidateProvider extends Disposable {
 
 		// get elements from outline or folding model
 		const outlineModel = await OutlineModel.create(this._languageFeaturesService.documentSymbolProvider, model, token);
+		console.log('outlineModel : ', outlineModel);
 		if (token.isCancellationRequested) {
 			return;
 		}
 		if (outlineModel.children.size !== 0) {
 			const { stickyOutlineElement, providerID } = StickyOutlineElement.fromOutlineModel(outlineModel, this._model?.outlineProviderId);
+			console.log('stickyOutlineElement : ', stickyOutlineElement);
 			this._model = new StickyOutlineModel(model.uri, modelVersionId, stickyOutlineElement, providerID);
-
 		} else {
 			const foldingController = FoldingController.get(this._editor);
 			const foldingModel = await foldingController?.getFoldingModel();
+			console.log('foldingModel : ', foldingModel);
 			if (token.isCancellationRequested) {
 				return;
 			}
 			if (foldingModel && foldingModel.regions.length !== 0) {
 				const foldingElement = StickyOutlineElement.fromFoldingModel(foldingModel);
+				console.log('foldingElement : ', foldingElement);
 				this._model = new StickyOutlineModel(model.uri, modelVersionId, foldingElement, undefined);
 			} else {
 				this._model = undefined;
@@ -215,6 +218,7 @@ class StickyOutlineElement {
 		const children: StickyOutlineElement[] = [];
 		for (const child of outlineElement.children.values()) {
 			if (child.symbol.selectionRange.startLineNumber !== child.symbol.range.endLineNumber) {
+				// Don't add two outlines that could start on the same lines
 				if (child.symbol.selectionRange.startLineNumber !== previousStartLine) {
 					children.push(StickyOutlineElement.fromOutlineElement(child, child.symbol.selectionRange.startLineNumber));
 				} else {
@@ -290,6 +294,7 @@ class StickyOutlineElement {
 		let range: StickyRange | undefined;
 		const stackOfParents: StickyRange[] = [];
 
+		// Initially empty children and undefined parent
 		const stickyOutlineElement = new StickyOutlineElement(
 			undefined,
 			[],
@@ -299,18 +304,23 @@ class StickyOutlineElement {
 
 		for (let i = 0; i < length; i++) {
 			range = new StickyRange(regions.getStartLineNumber(i), regions.getEndLineNumber(i) + 1);
-			while (stackOfParents.length !== 0 && (range.startLineNumber < stackOfParents[stackOfParents.length - 1].startLineNumber || range.endLineNumber > stackOfParents[stackOfParents.length - 1].endLineNumber)) {
+			// While the current range intersects the last range in the stack of parents
+			while (stackOfParents.length !== 0
+				&& (range.startLineNumber < stackOfParents[stackOfParents.length - 1].startLineNumber
+					|| range.endLineNumber > stackOfParents[stackOfParents.length - 1].endLineNumber)) {
+				// Pop the stack of parents
 				stackOfParents.pop();
 				if (parentStickyOutlineElement.parent !== undefined) {
 					parentStickyOutlineElement = parentStickyOutlineElement.parent;
 				}
 			}
 			const child = new StickyOutlineElement(
-				range,
+				range, // range
 				[],
-				parentStickyOutlineElement
+				parentStickyOutlineElement // parent
 			);
 			parentStickyOutlineElement.children.push(child);
+			// Go down to the sticky outline element pushed
 			parentStickyOutlineElement = child;
 			stackOfParents.push(range);
 		}

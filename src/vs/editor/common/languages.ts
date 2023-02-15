@@ -1136,6 +1136,31 @@ export interface DocumentSymbolProvider {
 	provideDocumentSymbols(model: model.ITextModel, token: CancellationToken): ProviderResult<DocumentSymbol[]>;
 }
 
+// *** Sticky Scroll Provider ***
+
+export interface StickyRange {
+	startLineNumber: number;
+	endLineNumber: number;
+}
+
+export interface StickyOutlineElement {
+	range: StickyRange | undefined;
+	children: StickyOutlineElement[];
+	parent: StickyOutlineElement | undefined;
+}
+
+/**
+ * The sticky scroll provider interface defines the contract between extensions and the sticky scroll feature
+*/
+export interface StickyScrollProvider {
+	/**
+	 * Provider sticky scroll information for the given document
+	 */
+	provideStickyScrollOutlineModel(model: model.ITextModel, token: CancellationToken): ProviderResult<StickyOutlineElement>;
+}
+
+// *** Sticky Scroll Provider ***
+
 export interface TextEdit {
 	range: IRange;
 	text: string;
