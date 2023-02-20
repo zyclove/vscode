@@ -20,6 +20,10 @@ import { IRange, Range } from 'vs/editor/common/core/range';
 import { StandardMouseEvent } from 'vs/base/browser/mouseEvent';
 import 'vs/css!./stickyScroll';
 import { EmbeddedCodeEditorWidget } from 'vs/editor/browser/widget/embeddedCodeEditorWidget';
+// import { ViewportData } from 'vs/editor/common/viewLayout/viewLinesViewportData';
+// import { Selection } from 'vs/editor/common/core/selection';
+// import { RenderingContext } from 'vs/editor/browser/view/renderingContext';
+// import { ViewContext } from 'vs/editor/common/viewModel/viewContext';
 
 interface CustomMouseEvent {
 	detail: string;
@@ -39,6 +43,7 @@ export class StickyScrollWidget extends Disposable implements IOverlayWidget {
 
 	private readonly _layoutInfo: EditorLayoutInfo;
 	private readonly _rootDomNode: HTMLElement = document.createElement('div');
+	private readonly _domNodeIndentGuides: HTMLElement = document.createElement('div');
 	private readonly _disposableStore = this._register(new DisposableStore());
 
 	private _lineNumbers: number[] = [];
@@ -55,11 +60,15 @@ export class StickyScrollWidget extends Disposable implements IOverlayWidget {
 	) {
 		super();
 		this._layoutInfo = this._editor.getLayoutInfo();
+		this._domNodeIndentGuides = document.createElement('div');
+		this._domNodeIndentGuides.className = 'sticky-widget-indent-guide';
+		const width = this._editor.getLayoutInfo().width - this._editor.getLayoutInfo().minimap.minimapCanvasOuterWidth - this._editor.getLayoutInfo().verticalScrollbarWidth;
+		this._domNodeIndentGuides.style.width = `${width}px`;
+
 		this._rootDomNode = document.createElement('div');
 		this._rootDomNode.className = 'sticky-widget';
 		this._rootDomNode.classList.toggle('peek', _editor instanceof EmbeddedCodeEditorWidget);
 		this._rootDomNode.style.width = `${this._layoutInfo.width - this._layoutInfo.minimap.minimapCanvasOuterWidth - this._layoutInfo.verticalScrollbarWidth}px`;
-
 		this._register(this._updateLinkGesture());
 	}
 
@@ -168,6 +177,7 @@ export class StickyScrollWidget extends Disposable implements IOverlayWidget {
 		this._disposableStore.clear();
 		this._lineNumbers.length = 0;
 		dom.clearNode(this._rootDomNode);
+		dom.clearNode(this._domNodeIndentGuides);
 
 		this._lastLineRelativePosition = state.lastLineRelativePosition;
 		this._lineNumbers = state.lineNumbers;
@@ -279,12 +289,59 @@ export class StickyScrollWidget extends Disposable implements IOverlayWidget {
 			return;
 		}
 		for (const [index, line] of this._lineNumbers.entries()) {
+			console.log('line : ', line);
+			const activeIndent = this._editor._getViewModel()?.getActiveIndentGuide(line, line, line).indent;
+			console.log('activeIndent :', activeIndent);
+			const lineIndent = this._editor._getViewModel()?.getLinesIndentGuides(line, line);
+			console.log('lineIndent : ', lineIndent);
+			const lineIndentNumber = lineIndent![0];
+			const indentGuideNode = document.createElement('div');
+			const lineHeight = this._editor.getOption(EditorOption.lineHeight);
+			indentGuideNode.style.lineHeight = `${lineHeight}px`;
+			indentGuideNode.style.height = `${lineHeight}px`;
+			indentGuideNode.className = 'sticky-widget-indent-guide-line';
+			const width = this._editor.getLayoutInfo().width - this._editor.getLayoutInfo().minimap.minimapCanvasOuterWidth - this._editor.getLayoutInfo().verticalScrollbarWidth;
+			indentGuideNode.style.width = `${width}px`;
+			const spaceWidth = this._editor.getOption(EditorOption.fontInfo).spaceWidth;
+
+			// const viewLayout = this._editor._getViewModel()?.viewLayout;
+			// const partialViewportData = viewLayout!.getLinesViewportData();
+			// const viewModel = this._editor._getViewModel();
+			// const viewportData = new ViewportData(
+			//	[new Selection(1, 1, 1, 1)],
+			//	partialViewportData,
+			//	viewLayout!.getWhitespaceViewportData(),
+			//	viewModel!
+			// );
+			// const viewportData = viewLayout?.getLinesViewportData();
+			// const context = new ViewContext(this._editor.confi, colorTheme, model);
+			// const renderingContext = new RenderingContext(viewLayout!, viewportData, viewLines);
+
+			for (let i = 0; i < lineIndentNumber; i++) {
+				// `<div class="core-guide ${guide.className} ${className}" style="left:${left}px;height:${lineHeight}px;width:${width}px"></div>`;
+				const childIndent = document.createElement('div');
+				// childIndent.classList.add('core-guide');
+				// childIndent.classList.add('vertical');
+				// childIndent.classList.add('core-guide-indent');
+
+				const left = 100 + (i - 1) * spaceWidth;
+				childIndent.style.left = `${left}px`;
+				childIndent.style.width = `${spaceWidth}px`;
+				childIndent.style.lineHeight = `${lineHeight}px`;
+				childIndent.style.height = `${lineHeight}px`;
+				childIndent.style.float = 'left';
+				// childIndent.innerText = 'indent';
+				childIndent.style.borderRight = '1px solid white';
+				indentGuideNode.appendChild(childIndent);
+			}
+			this._domNodeIndentGuides.appendChild(indentGuideNode);
 			this._rootDomNode.appendChild(this._renderChildNode(index, line));
 		}
 		const editorLineHeight = this._editor.getOption(EditorOption.lineHeight);
 		const widgetHeight: number = this._lineNumbers.length * editorLineHeight + this._lastLineRelativePosition;
 		this._rootDomNode.style.display = widgetHeight > 0 ? 'block' : 'none';
 		this._rootDomNode.style.height = widgetHeight.toString() + 'px';
+		this._domNodeIndentGuides.style.height = widgetHeight.toString() + 'px';
 		const minimapSide = this._editor.getOption(EditorOption.minimap).side;
 		if (minimapSide === 'left') {
 			this._rootDomNode.style.marginLeft = this._editor.getLayoutInfo().minimap.minimapCanvasOuterWidth + 'px';
@@ -296,7 +353,11 @@ export class StickyScrollWidget extends Disposable implements IOverlayWidget {
 	}
 
 	getDomNode(): HTMLElement {
-		return this._rootDomNode;
+		const node = document.createElement('div');
+		node.appendChild(this._rootDomNode);
+		node.appendChild(this._domNodeIndentGuides);
+		return node;
+		// return this._rootDomNode;
 	}
 
 	getPosition(): IOverlayWidgetPosition | null {

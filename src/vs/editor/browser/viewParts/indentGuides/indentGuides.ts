@@ -157,7 +157,8 @@ export class IndentGuidesOverlay extends DynamicViewOverlay {
 		this._renderResult = output;
 	}
 
-	private getGuidesByLine(
+	// used to be private
+	public getGuidesByLine(
 		visibleStartLineNumber: number,
 		visibleEndLineNumber: number,
 		activeCursorPosition: Position | null
