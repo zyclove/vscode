@@ -315,6 +315,20 @@ export class ViewLines extends ViewPart implements IVisibleLinesHost<ViewLine>, 
 				this._horizontalRevealRequest = null;
 			}
 		}
+		console.log('e.scrollHeight :', e.scrollHeight);
+		console.log('e.scrollHeight/lineHeight : ', e.scrollHeight / this._lineHeight);
+		console.log('e.scrollTop : ', e.scrollTop);
+		console.log('e.scrollTop/lineHeight : ', e.scrollTop / this._lineHeight);
+		// its about the cursor
+		if (this._stickyScrollEnabled && e.scrollTop < this._maxNumberStickyLines * this._lineHeight) {
+			console.log('entered into if loop');
+			const paddingTop = this._maxNumberStickyLines * this._lineHeight;
+			// const newScrollPosition = {
+			//	scrollTop: this._context.viewModel.viewLayout.getCurrentScrollTop() + paddingTop,
+			//	scrollLeft: 0
+			//};
+			//this._context.viewModel.viewLayout.setScrollPosition(newScrollPosition, ScrollType.Immediate);
+		}
 		this.domNode.setWidth(e.scrollWidth);
 		return this._visibleLines.onScrollChanged(e) || true;
 	}
