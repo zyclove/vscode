@@ -1353,6 +1353,8 @@ export namespace CoreNavigationCommands {
 			if (args.revealCursor) {
 				// must ensure cursor is in new visible range
 				const desiredVisibleViewRange = viewModel.getCompletelyVisibleViewRangeAtScrollTop(desiredScrollTop);
+				// TODO: Find if sticky scroll is enabled, from here the maximum number of lines that can be shown and then the
+				// desiredVisibleViewRange should be changed
 				viewModel.setCursorStates(
 					source,
 					CursorChangeReason.Explicit,

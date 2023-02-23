@@ -319,10 +319,26 @@ export class ViewLines extends ViewPart implements IVisibleLinesHost<ViewLine>, 
 		console.log('e.scrollHeight/lineHeight : ', e.scrollHeight / this._lineHeight);
 		console.log('e.scrollTop : ', e.scrollTop);
 		console.log('e.scrollTop/lineHeight : ', e.scrollTop / this._lineHeight);
+
+		const stickyScrollThreshold = e.scrollTop + this._maxNumberStickyLines * this._lineHeight;
+		console.log('stickyScrollThreshold : ', stickyScrollThreshold);
+
+		let minimumCursorLineNumber = Infinity;
+		this._context.viewModel.getCursorStates().forEach((cursor) => {
+			if (cursor.viewState.position.lineNumber < minimumCursorLineNumber) {
+				minimumCursorLineNumber = cursor.viewState.position.lineNumber;
+			}
+		});
+
+		console.log('minimumCursorLineNumber : ', minimumCursorLineNumber);
+
+		const pixelPositionOfCursor = minimumCursorLineNumber * this._lineHeight;
+		console.log('PixelPositionOfCursor : ', pixelPositionOfCursor);
+
 		// its about the cursor
 		if (this._stickyScrollEnabled && e.scrollTop < this._maxNumberStickyLines * this._lineHeight) {
 			console.log('entered into if loop');
-			const paddingTop = this._maxNumberStickyLines * this._lineHeight;
+			// const paddingTop = this._maxNumberStickyLines * this._lineHeight;
 			// const newScrollPosition = {
 			//	scrollTop: this._context.viewModel.viewLayout.getCurrentScrollTop() + paddingTop,
 			//	scrollLeft: 0
