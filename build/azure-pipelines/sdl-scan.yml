@@ -123,7 +123,7 @@ stages:
               retry { exec { yarn --frozen-lockfile --check-files } }
             env:
               npm_config_arch: "$(NPM_ARCH)"
-              npm_config_node_gyp: "node_gyp"
+              npm_config_node_gyp: "$(Join-Path $pwd.Path 'node_gyp')"
               PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
               GITHUB_TOKEN: "$(github-distro-mixin-password)"
               CHILD_CONCURRENCY: 1
