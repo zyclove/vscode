@@ -1355,6 +1355,10 @@ export namespace CoreNavigationCommands {
 				const desiredVisibleViewRange = viewModel.getCompletelyVisibleViewRangeAtScrollTop(desiredScrollTop);
 				// TODO: Find if sticky scroll is enabled, from here the maximum number of lines that can be shown and then the
 				// desiredVisibleViewRange should be changed
+
+				// Use context keys in order to find the line to sccroll to
+				const stickyScrollEnabledContextKey = ContextKeyExpr.has('config.editor.stickyScroll.enabled');
+
 				viewModel.setCursorStates(
 					source,
 					CursorChangeReason.Explicit,
