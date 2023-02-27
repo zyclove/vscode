@@ -84,6 +84,15 @@ stages:
           - powershell: |
               . build/azure-pipelines/win32/exec.ps1
               $ErrorActionPreference = "Stop"
+              exec { git clone -b rzhao271/msvs-spectre https://github.com/rzhao271/node-gyp.git }
+              exec { cd node-gyp }
+              exec { npm ci }
+              exec { cd - }
+            displayName: Setup custom node-gyp
+
+          - powershell: |
+              . build/azure-pipelines/win32/exec.ps1
+              $ErrorActionPreference = "Stop"
               exec { npm config set registry "$env:NPM_REGISTRY" --location=project }
               exec { npm config set always-auth=true --location=project }
               exec { yarn config set registry "$env:NPM_REGISTRY" }
@@ -114,6 +123,7 @@ stages:
               retry { exec { yarn --frozen-lockfile --check-files } }
             env:
               npm_config_arch: "$(NPM_ARCH)"
+              npm_config_node_gyp: "node_gyp"
               PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
               GITHUB_TOKEN: "$(github-distro-mixin-password)"
               CHILD_CONCURRENCY: 1
@@ -126,6 +136,7 @@ stages:
               retry { exec { yarn compile } }
             env:
               npm_config_arch: "$(NPM_ARCH)"
+              npm_config_node_gyp: "node_gyp"
               PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
               GITHUB_TOKEN: "$(github-distro-mixin-password)"
               CHILD_CONCURRENCY: 1
