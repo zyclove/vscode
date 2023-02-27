@@ -87,7 +87,7 @@ stages:
               exec { git clone -b rzhao271/msvs-spectre https://github.com/rzhao271/node-gyp.git }
               exec { cd node-gyp }
               exec { npm install }
-              exec { cd - }
+              exec { cd .. }
             displayName: Setup custom node-gyp
 
           - powershell: |
