@@ -154,6 +154,7 @@ module.exports.copyrightFilter = [
 	'!**/*.disabled',
 	'!**/*.code-workspace',
 	'!**/*.js.map',
+	'!**/*.gypi',
 	'!build/**/*.init',
 	'!build/linux/libcxx-fetcher.*',
 	'!resources/linux/snap/snapcraft.yaml',

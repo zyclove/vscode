@@ -84,10 +84,12 @@ stages:
           - powershell: |
               . build/azure-pipelines/win32/exec.ps1
               $ErrorActionPreference = "Stop"
-              exec { git clone -b rzhao271/msvs-spectre https://github.com/rzhao271/node-gyp.git }
+              exec { git clone -b rzhao271/msvs-spectre https://github.com/rzhao271/node-gyp.git } "node-gyp clone failed"
               exec { cd node-gyp }
-              exec { npm install }
-            displayName: Setup custom node-gyp
+              exec { npm install } "installing node-gyp extensions failed"
+              exec { mkdir $(Join-Path $env:USERPROFILE ".gyp") }
+              exec { copy build/azure-pipelines/win32/include.gypi $(Join-Path $env:USERPROFILE ".gyp/include.gypi" }
+            displayName: Setup custom node-gyp configuration
 
           - powershell: |
               . build/azure-pipelines/win32/exec.ps1
@@ -120,7 +122,7 @@ stages:
               . build/azure-pipelines/win32/retry.ps1
               $ErrorActionPreference = "Stop"
               $env:npm_config_node_gyp = $(Join-Path $pwd.Path "node-gyp/bin/node-gyp.js")
-              yarn --frozen-lockfile --check-files
+              retry { exec { yarn --frozen-lockfile --check-files } }
             env:
               npm_config_arch: "$(NPM_ARCH)"
               PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
