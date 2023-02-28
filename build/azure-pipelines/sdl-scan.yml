@@ -87,7 +87,6 @@ stages:
               exec { git clone -b rzhao271/msvs-spectre https://github.com/rzhao271/node-gyp.git }
               exec { cd node-gyp }
               exec { npm install }
-              exec { cd .. }
             displayName: Setup custom node-gyp
 
           - powershell: |
@@ -120,7 +119,7 @@ stages:
               . build/azure-pipelines/win32/exec.ps1
               . build/azure-pipelines/win32/retry.ps1
               $ErrorActionPreference = "Stop"
-              exec { $env:npm_config_node_gyp = $(Join-Path $pwd.Path "node_gyp") }
+              exec { $env:npm_config_node_gyp = $(Join-Path $pwd.Path "node-gyp/bin/node-gyp.js") }
               retry { exec { yarn --frozen-lockfile --check-files } }
             env:
               npm_config_arch: "$(NPM_ARCH)"
@@ -133,7 +132,7 @@ stages:
               . build/azure-pipelines/win32/exec.ps1
               . build/azure-pipelines/win32/retry.ps1
               $ErrorActionPreference = "Stop"
-              exec { $env:npm_config_node_gyp = $(Join-Path $pwd.Path "node_gyp") }
+              exec { $env:npm_config_node_gyp = $(Join-Path $pwd.Path "node-gyp/bin/node-gyp.js") }
               retry { exec { yarn compile } }
             env:
               npm_config_arch: "$(NPM_ARCH)"
