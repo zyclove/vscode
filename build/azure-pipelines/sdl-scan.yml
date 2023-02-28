@@ -87,6 +87,7 @@ stages:
               exec { git clone -b rzhao271/msvs-spectre https://github.com/rzhao271/node-gyp.git } "node-gyp clone failed"
               exec { cd node-gyp }
               exec { npm install } "installing node-gyp extensions failed"
+              exec { cd .. }
               exec { mkdir $(Join-Path $env:USERPROFILE ".gyp") }
               exec { copy build/azure-pipelines/win32/include.gypi $(Join-Path $env:USERPROFILE ".gyp/include.gypi") }
             displayName: Setup custom node-gyp configuration
