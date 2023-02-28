@@ -119,8 +119,8 @@ stages:
               . build/azure-pipelines/win32/exec.ps1
               . build/azure-pipelines/win32/retry.ps1
               $ErrorActionPreference = "Stop"
-              exec { $env:npm_config_node_gyp = $(Join-Path $pwd.Path "node-gyp/bin/node-gyp.js") }
-              retry { exec { yarn --frozen-lockfile --check-files } }
+              $env:npm_config_node_gyp = $(Join-Path $pwd.Path "node-gyp/bin/node-gyp.js")
+              yarn --frozen-lockfile --check-files
             env:
               npm_config_arch: "$(NPM_ARCH)"
               PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
@@ -132,7 +132,6 @@ stages:
               . build/azure-pipelines/win32/exec.ps1
               . build/azure-pipelines/win32/retry.ps1
               $ErrorActionPreference = "Stop"
-              exec { $env:npm_config_node_gyp = $(Join-Path $pwd.Path "node-gyp/bin/node-gyp.js") }
               retry { exec { yarn compile } }
             env:
               npm_config_arch: "$(NPM_ARCH)"
