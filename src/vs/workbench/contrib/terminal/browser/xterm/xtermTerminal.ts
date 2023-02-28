@@ -41,13 +41,15 @@ import { IContextKey } from 'vs/platform/contextkey/common/contextkey';
 import { URI } from 'vs/base/common/uri';
 import { ITextModel } from 'vs/editor/common/model';
 import { IModelService } from 'vs/editor/common/services/model';
-import { StringBuilder } from 'vs/editor/common/core/stringBuilder';
 import { CodeEditorWidget, ICodeEditorWidgetOptions } from 'vs/editor/browser/widget/codeEditorWidget';
 import { EditorExtensionsRegistry } from 'vs/editor/browser/editorExtensions';
 import { getSimpleEditorOptions } from 'vs/workbench/contrib/codeEditor/browser/simpleEditorOptions';
 import { IEditorConstructionOptions } from 'vs/editor/browser/config/editorConfiguration';
 import { LinkDetector } from 'vs/editor/contrib/links/browser/links';
 import { SelectionClipboardContributionID } from 'vs/workbench/contrib/codeEditor/browser/selectionClipboard';
+import { ILanguageFeaturesService } from 'vs/editor/common/services/languageFeatures';
+import { CancellationToken } from 'vs/base/common/cancellation';
+import { DocumentSymbol } from 'vs/editor/common/languages';
 
 const enum RenderConstants {
 	/**
@@ -791,7 +793,8 @@ class AccessibleBuffer extends DisposableStore {
 		private readonly _capabilities: ITerminalCapabilityStore,
 		@IInstantiationService private readonly _instantiationService: IInstantiationService,
 		@IModelService private readonly _modelService: IModelService,
-		@IConfigurationService configurationService: IConfigurationService
+		@IConfigurationService configurationService: IConfigurationService,
+		@ILanguageFeaturesService private readonly _languageFeaturesService: ILanguageFeaturesService
 	) {
 		super();
 		const codeEditorWidgetOptions: ICodeEditorWidgetOptions = {
@@ -827,6 +830,12 @@ class AccessibleBuffer extends DisposableStore {
 				this._font = this._terminal.getFont();
 			}
 		}));
+		this._languageFeaturesService.documentSymbolProvider.register('Terminal', {
+			provideDocumentSymbols: (model: ITextModel, token: CancellationToken): Promise<DocumentSymbol[] | undefined> => {
+				console.log(model);
+				return Promise.resolve([{ name: 'test', detail: 'none', kind: 0, tags: [], range: { startLineNumber: 0, endLineNumber: 0, startColumn: 0, endColumn: 5 }, selectionRange: { startLineNumber: 0, endLineNumber: 0, startColumn: 0, endColumn: 5 } }]);
+			}
+		});
 	}
 
 	async focus(): Promise<void> {
@@ -835,7 +844,7 @@ class AccessibleBuffer extends DisposableStore {
 
 	private async _updateBufferEditor(): Promise<void> {
 		const commandDetection = this._capabilities.get(TerminalCapability.CommandDetection);
-		const fragment = !!commandDetection ? this._getShellIntegrationContent() : this._getAllContent();
+		const fragment = this._getBufferContent();
 		const model = await this._getTextModel(URI.from({ scheme: AccessibleBufferConstants.Scheme, fragment }));
 		if (model) {
 			this._bufferEditor.setModel(model);
@@ -877,28 +886,11 @@ class AccessibleBuffer extends DisposableStore {
 		if (existing && !existing.isDisposed()) {
 			return existing;
 		}
-
+		existing?.setLanguage('terminal');
 		return this._modelService.createModel(resource.fragment, null, resource, false);
 	}
 
-	private _getShellIntegrationContent(): string {
-		const commands = this._capabilities.get(TerminalCapability.CommandDetection)?.commands;
-		const sb = new StringBuilder(10000);
-		if (!commands?.length) {
-			return this._getAllContent();
-		}
-		for (const command of commands) {
-			sb.appendString(command.command.replace(new RegExp(' ', 'g'), '\xA0'));
-			if (command.exitCode !== 0) {
-				sb.appendString(` exited with code ${command.exitCode}`);
-			}
-			sb.appendString('\n');
-			sb.appendString(command.getOutput()?.replace(new RegExp(' ', 'g'), '\xA0') || '');
-		}
-		return sb.build();
-	}
-
-	private _getAllContent(): string {
+	private _getBufferContent(): string {
 		const lines: string[] = [];
 		let currentLine: string = '';
 		const buffer = this._terminal.raw.buffer.active;
