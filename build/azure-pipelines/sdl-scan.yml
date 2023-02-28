@@ -88,7 +88,7 @@ stages:
               exec { cd node-gyp }
               exec { npm install } "installing node-gyp extensions failed"
               exec { mkdir $(Join-Path $env:USERPROFILE ".gyp") }
-              exec { copy build/azure-pipelines/win32/include.gypi $(Join-Path $env:USERPROFILE ".gyp/include.gypi" }
+              exec { copy build/azure-pipelines/win32/include.gypi $(Join-Path $env:USERPROFILE ".gyp/include.gypi") }
             displayName: Setup custom node-gyp configuration
 
           - powershell: |
