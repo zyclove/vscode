@@ -2,7 +2,6 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-
 import * as dom from 'vs/base/browser/dom';
 import { IKeyboardEvent } from 'vs/base/browser/keyboardEvent';
 import 'vs/base/browser/ui/codicons/codiconStyles'; // The codicon symbol styles are defined here and must be loaded
@@ -68,6 +67,7 @@ class PersistedWidgetSize {
 	private readonly _key: string;
 
 	constructor(
+		// Storing the size of the suggest widget inside of the storage service
 		private readonly _service: IStorageService,
 		editor: ICodeEditor
 	) {
@@ -88,6 +88,8 @@ class PersistedWidgetSize {
 	}
 
 	store(size: dom.Dimension) {
+		console.log('Inside of the store function');
+		console.log('size : ', size);
 		this._service.store(this._key, JSON.stringify(size), StorageScope.PROFILE, StorageTarget.MACHINE);
 	}
 
@@ -153,11 +155,15 @@ export class SuggestWidget implements IDisposable {
 		@IInstantiationService instantiationService: IInstantiationService,
 	) {
 		this.element = new ResizableHTMLElement();
+		// The suggest-widget class is placed directly on the resizeable html element
 		this.element.domNode.classList.add('editor-widget', 'suggest-widget');
 
+		// The content widget and the resizeable element are separate
 		this._contentWidget = new SuggestContentWidget(this, editor);
+		// persisting the widget size inside of the storage service
 		this._persistedSize = new PersistedWidgetSize(_storageService, editor);
 
+		// Most likely should use the resize state here too
 		class ResizeState {
 			constructor(
 				readonly persistedSize: dom.Dimension | undefined,
@@ -169,13 +175,20 @@ export class SuggestWidget implements IDisposable {
 
 		let state: ResizeState | undefined;
 		this._disposables.add(this.element.onDidWillResize(() => {
+			console.log('Inside of the onDidWillResize function');
 			this._contentWidget.lockPreference();
-			state = new ResizeState(this._persistedSize.restore(), this.element.size);
+			console.log('this.element.size : ', this.element.size);
+			const persistedSize = this._persistedSize.restore();
+			console.log('persistedSize : ', persistedSize);
+			state = new ResizeState(persistedSize, this.element.size);
 		}));
 		this._disposables.add(this.element.onDidResize(e => {
 
+			console.log('Inside of onDidResize function');
+			console.log('e : ', e);
 			this._resize(e.dimension.width, e.dimension.height);
 
+			console.log('state : ', state);
 			if (state) {
 				state.persistHeight = state.persistHeight || !!e.north || !!e.south;
 				state.persistWidth = state.persistWidth || !!e.east || !!e.west;
@@ -189,8 +202,13 @@ export class SuggestWidget implements IDisposable {
 				// only store width or height value that have changed and also
 				// only store changes that are above a certain threshold
 				const { itemHeight, defaultSize } = this.getLayoutInfo();
+				console.log('itemHeight : ', itemHeight);
+				console.log('defaultSize : ', defaultSize);
+
 				const threshold = Math.round(itemHeight / 2);
 				let { width, height } = this.element.size;
+				console.log('this.element.size : ', this.element.size);
+				console.log('threshold : ', threshold);
 				if (!state.persistHeight || Math.abs(state.currentSize.height - height) <= threshold) {
 					height = state.persistedSize?.height ?? defaultSize.height;
 				}
@@ -795,12 +813,16 @@ export class SuggestWidget implements IDisposable {
 		// status bar
 		this._status.element.style.height = `${info.itemHeight}px`;
 
+		console.log('this._state : ', this._state);
+
 		if (this._state === State.Empty || this._state === State.Loading) {
+			console.log('Inside of the first if loop');
 			// showing a message only
 			height = info.itemHeight + info.borderHeight;
 			width = info.defaultSize.width / 2;
 			this.element.enableSashes(false, false, false, false);
 			this.element.minSize = this.element.maxSize = new dom.Dimension(width, height);
+			// Setting the preference of where the content widget should be located
 			this._contentWidget.setPreference(ContentWidgetPositionPreference.BELOW);
 
 		} else {
@@ -829,6 +851,9 @@ export class SuggestWidget implements IDisposable {
 				// height is capped to fit
 				height = this._cappedHeight.wanted;
 			}
+
+			console.log('minHeight : ', minHeight);
+			console.log('maxHeight : ', maxHeight);
 
 			if (height < minHeight) {
 				height = minHeight;
@@ -863,11 +888,15 @@ export class SuggestWidget implements IDisposable {
 
 	private _resize(width: number, height: number): void {
 
+		console.log('Inside of _resize function');
 		const { width: maxWidth, height: maxHeight } = this.element.maxSize;
+		console.log('maxWidth : ', maxWidth);
+		console.log('maxHeight : ', maxHeight);
 		width = Math.min(maxWidth, width);
 		height = Math.min(maxHeight, height);
 
 		const { statusBarHeight } = this.getLayoutInfo();
+		console.log('statusBarHeight: ', statusBarHeight);
 		this._list.layout(height - statusBarHeight, width);
 		this._listElement.style.height = `${height - statusBarHeight}px`;
 		this.element.layout(height, width);
@@ -878,6 +907,7 @@ export class SuggestWidget implements IDisposable {
 
 	private _positionDetails(): void {
 		if (this._isDetailsVisible()) {
+			console.log('Inside of the case when details are visible');
 			this._details.placeAtAnchor(this.element.domNode, this._contentWidget.getPosition()?.preference[0] === ContentWidgetPositionPreference.BELOW);
 		}
 	}
@@ -921,6 +951,7 @@ export class SuggestWidget implements IDisposable {
 	}
 }
 
+// The suggest content widget inherits from the IContentWidget and the SuggestWidget inherits from the disposable class
 export class SuggestContentWidget implements IContentWidget {
 
 	readonly allowEditorOverflow = true;
@@ -934,6 +965,7 @@ export class SuggestContentWidget implements IContentWidget {
 	private _hidden: boolean = false;
 
 	constructor(
+		// The suggest content widget, takes int eh suggest widget as an input
 		private readonly _widget: SuggestWidget,
 		private readonly _editor: ICodeEditor
 	) { }
@@ -950,6 +982,7 @@ export class SuggestContentWidget implements IContentWidget {
 	}
 
 	getDomNode(): HTMLElement {
+		// Accessing the resizeable element from the suggest widget, taking its dom element
 		return this._widget.element.domNode;
 	}
 
@@ -983,8 +1016,13 @@ export class SuggestContentWidget implements IContentWidget {
 	}
 
 	beforeRender() {
+		// Taking the height and the width of the resizeable element from the suggest widget
 		const { height, width } = this._widget.element.size;
 		const { borderWidth, horizontalPadding } = this._widget.getLayoutInfo();
+		console.log('borderWidth : ', borderWidth);
+		console.log('horizontalPadding : ', horizontalPadding);
+		console.log('height : ', height);
+		console.log('width : ', width);
 		return new dom.Dimension(width + 2 * borderWidth + horizontalPadding, height + 2 * borderWidth);
 	}
 
@@ -993,16 +1031,19 @@ export class SuggestContentWidget implements IContentWidget {
 	}
 
 	setPreference(preference: ContentWidgetPositionPreference) {
+		// When the preference is not locked, we can set a new preference
 		if (!this._preferenceLocked) {
 			this._preference = preference;
 		}
 	}
 
 	lockPreference() {
+		// Locking the preference
 		this._preferenceLocked = true;
 	}
 
 	unlockPreference() {
+		// Unlocking the preference
 		this._preferenceLocked = false;
 	}
 

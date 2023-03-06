@@ -135,6 +135,7 @@ export class ResizableHTMLElement {
 
 	layout(height: number = this.size.height, width: number = this.size.width): void {
 
+		console.log('Inside of the layout function of the resizable element');
 		const { height: minHeight, width: minWidth } = this._minSize;
 		const { height: maxHeight, width: maxWidth } = this._maxSize;
 
