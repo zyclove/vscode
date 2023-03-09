@@ -29,7 +29,9 @@ const $ = dom.$;
 
 export class ContentHoverController extends Disposable {
 
+	// The participants which will display code inside of the hover
 	private readonly _participants: IEditorHoverParticipant[];
+	// The controller creates a content hover widget
 	private readonly _widget = this._register(this._instantiationService.createInstance(ContentHoverWidget, this._editor));
 	private readonly _computer: ContentHoverComputer;
 	private readonly _hoverOperation: HoverOperation<IHoverPart>;
@@ -48,6 +50,7 @@ export class ContentHoverController extends Disposable {
 		for (const participant of HoverParticipantRegistry.getAll()) {
 			this._participants.push(this._instantiationService.createInstance(participant, this._editor));
 		}
+		// Sorting the participants in terms of the ordinal number
 		this._participants.sort((p1, p2) => p1.hoverOrdinal - p2.hoverOrdinal);
 
 		this._computer = new ContentHoverComputer(this._editor, this._participants);
@@ -61,11 +64,13 @@ export class ContentHoverController extends Disposable {
 			const messages = (result.hasLoadingMessage ? this._addLoadingMessage(result.value) : result.value);
 			this._withResult(new HoverResult(this._computer.anchor, messages, result.isComplete));
 		}));
+		// When the hover message is shown, if you press on the escape button, the hover message will be hidden
 		this._register(dom.addStandardDisposableListener(this._widget.getDomNode(), 'keydown', (e) => {
 			if (e.equals(KeyCode.Escape)) {
 				this.hide();
 			}
 		}));
+		// Tokenization has changed so need to rerender what is shown inside of the editor hover
 		this._register(TokenizationRegistry.onDidChange(() => {
 			if (this._widget.position && this._currentResult) {
 				this._widget.clear();
@@ -108,6 +113,7 @@ export class ContentHoverController extends Disposable {
 		}
 
 		anchorCandidates.sort((a, b) => b.priority - a.priority);
+		// Showing the first anchor candidate
 		return this._startShowingOrUpdateHover(anchorCandidates[0], HoverStartMode.Delayed, HoverStartSource.Mouse, false, mouseEvent);
 	}
 
@@ -179,6 +185,7 @@ export class ContentHoverController extends Disposable {
 	}
 
 	private _setCurrentResult(hoverResult: HoverResult | null): void {
+		// If the current result is already the result that we want to render, then just do an early return
 		if (this._currentResult === hoverResult) {
 			// avoid updating the DOM to avoid resetting the user selection
 			return;
@@ -195,8 +202,11 @@ export class ContentHoverController extends Disposable {
 	}
 
 	public hide(): void {
+		// There is no more anchor to the hover widget
 		this._computer.anchor = null;
+		// Stop calculating and rendering the hover widget
 		this._hoverOperation.cancel();
+		// Set the current result to null
 		this._setCurrentResult(null);
 	}
 
@@ -218,6 +228,7 @@ export class ContentHoverController extends Disposable {
 				if (participant.createLoadingMessage) {
 					const loadingMessage = participant.createLoadingMessage(this._computer.anchor);
 					if (loadingMessage) {
+						// Adding the loading messages into an array
 						return result.slice(0).concat([loadingMessage]);
 					}
 				}
