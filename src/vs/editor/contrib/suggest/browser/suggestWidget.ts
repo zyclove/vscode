@@ -56,12 +56,14 @@ const enum State {
 	Details
 }
 
+// The item which is selected, its index in the list and the type of completion associated
 export interface ISelectedSuggestion {
 	item: CompletionItem;
 	index: number;
 	model: CompletionModel;
 }
 
+// Saving the widget size in the storage service, so that next time, this size is remembered
 class PersistedWidgetSize {
 
 	private readonly _key: string;
@@ -75,9 +77,12 @@ class PersistedWidgetSize {
 	}
 
 	restore(): dom.Dimension | undefined {
+		// Retrieving the key from the storage service
 		const raw = this._service.get(this._key, StorageScope.PROFILE) ?? '';
 		try {
+			// Parsing the associated value
 			const obj = JSON.parse(raw);
+			// Checking if the associated value is of type dimension
 			if (dom.Dimension.is(obj)) {
 				return dom.Dimension.lift(obj);
 			}
@@ -87,6 +92,7 @@ class PersistedWidgetSize {
 		return undefined;
 	}
 
+	// Storing the size so that it can be retrieved later when the suggest widget appears again
 	store(size: dom.Dimension) {
 		console.log('Inside of the store function');
 		console.log('size : ', size);
@@ -103,42 +109,53 @@ export class SuggestWidget implements IDisposable {
 	private static LOADING_MESSAGE: string = nls.localize('suggestWidget.loading', "Loading...");
 	private static NO_SUGGESTIONS_MESSAGE: string = nls.localize('suggestWidget.noSuggestions', "No suggestions.");
 
+	// The state shows whether the suggest hover widget is showing or not
 	private _state: State = State.Hidden;
 	private _isAuto: boolean = false;
 	private _loadingTimeout?: IDisposable;
 	private readonly _pendingLayout = new MutableDisposable();
 	private readonly _pendingShowDetails = new MutableDisposable();
 	private _currentSuggestionDetails?: CancelablePromise<void>;
+	// The focused item points to the item that is currently focused in the list
 	private _focusedItem?: CompletionItem;
 	private _ignoreFocusEvents: boolean = false;
 	private _completionModel?: CompletionModel;
 	private _cappedHeight?: { wanted: number; capped: number };
+	// Generally the suggest widget is shown below, but it can be forced to be shown above
 	private _forceRenderingAbove: boolean = false;
 	private _explainMode: boolean = false;
 
+	// The element which can be resized, it has sashes which can be dragged in order to specify the dimension of the widget
 	readonly element: ResizableHTMLElement;
 	private readonly _messageElement: HTMLElement;
 	private readonly _listElement: HTMLElement;
 	private readonly _list: List<CompletionItem>;
 	private readonly _status: SuggestWidgetStatus;
 	private readonly _details: SuggestDetailsOverlay;
+	// The actual content of the suggest widget
 	private readonly _contentWidget: SuggestContentWidget;
+	// The persisted size of the widget
 	private readonly _persistedSize: PersistedWidgetSize;
 
+	// Context key for whether the suggest widget is visible
 	private readonly _ctxSuggestWidgetVisible: IContextKey<boolean>;
+	// Context key for whether the widget details should be visible
 	private readonly _ctxSuggestWidgetDetailsVisible: IContextKey<boolean>;
+	// Context key for whether multiple suggestions should be visible
 	private readonly _ctxSuggestWidgetMultipleSuggestions: IContextKey<boolean>;
+	// Context key for whether there is a suggestion which is being focused
 	private readonly _ctxSuggestWidgetHasFocusedSuggestion: IContextKey<boolean>;
 
 	private readonly _showTimeout = new TimeoutTimer();
 	private readonly _disposables = new DisposableStore();
 
-
+	// onDidSelect and onDidFocus are called on specific suggestions, not on the full suggestion widget
 	private readonly _onDidSelect = new PauseableEmitter<ISelectedSuggestion>();
 	private readonly _onDidFocus = new PauseableEmitter<ISelectedSuggestion>();
 	private readonly _onDidHide = new Emitter<this>();
 	private readonly _onDidShow = new Emitter<this>();
 
+	// Setting the event function from the Emitters
 	readonly onDidSelect: Event<ISelectedSuggestion> = this._onDidSelect.event;
 	readonly onDidFocus: Event<ISelectedSuggestion> = this._onDidFocus.event;
 	readonly onDidHide: Event<this> = this._onDidHide.event;
@@ -154,8 +171,9 @@ export class SuggestWidget implements IDisposable {
 		@IThemeService _themeService: IThemeService,
 		@IInstantiationService instantiationService: IInstantiationService,
 	) {
+		// The resizeable element is instantiated
 		this.element = new ResizableHTMLElement();
-		// The suggest-widget class is placed directly on the resizeable html element
+		// The suggest-widget class name is placed directly on the resizeable html element
 		this.element.domNode.classList.add('editor-widget', 'suggest-widget');
 
 		// The content widget and the resizeable element are separate
@@ -174,23 +192,37 @@ export class SuggestWidget implements IDisposable {
 		}
 
 		let state: ResizeState | undefined;
+
+		// When the resizeable element sashes are clicked, the on did will resize function fires
 		this._disposables.add(this.element.onDidWillResize(() => {
 			console.log('Inside of the onDidWillResize function');
+
+			// Locking the preferences of the content widget, presumably to mean that the content widget preferences
+			// can not be changed while the mouse is clicking on the content widget sahes
 			this._contentWidget.lockPreference();
 			console.log('this.element.size : ', this.element.size);
+			// Retrieving the persisted size from the storage service
 			const persistedSize = this._persistedSize.restore();
 			console.log('persistedSize : ', persistedSize);
+			// Creating a new state from the persisted size and the size of the resizeable element
 			state = new ResizeState(persistedSize, this.element.size);
 		}));
+
+		// When the sahes are let go, this means that the resize has happened
 		this._disposables.add(this.element.onDidResize(e => {
 
 			console.log('Inside of onDidResize function');
 			console.log('e : ', e);
+
+			// The dimension is stored as an event that is fired
 			this._resize(e.dimension.width, e.dimension.height);
 
 			console.log('state : ', state);
 			if (state) {
+				// Set the new persist height boolean to be the previous persist height boolean or whether if the north or the south sashes have been changed
+				// Meaning that the persist height indicates whether the height should be persisted in the storage service
 				state.persistHeight = state.persistHeight || !!e.north || !!e.south;
+				// The same is done for the width of the suggest widget
 				state.persistWidth = state.persistWidth || !!e.east || !!e.west;
 			}
 
