@@ -21,6 +21,9 @@ import { getSimpleEditorOptions } from 'vs/workbench/contrib/codeEditor/browser/
 import { ITerminalFont } from 'vs/workbench/contrib/terminal/common/terminal';
 import { IXtermTerminal } from 'vs/workbench/contrib/terminal/browser/terminal';
 import type { Terminal } from 'xterm';
+import { ILanguageFeaturesService } from 'vs/editor/common/services/languageFeatures';
+import { CancellationToken } from 'vs/base/common/cancellation';
+import { DocumentSymbol } from 'vs/editor/common/languages';
 
 const enum Constants {
 	Scheme = 'terminal-accessible-buffer',
@@ -41,7 +44,8 @@ export class AccessibleBufferWidget extends DisposableStore {
 		private readonly _xterm: IXtermTerminal & { raw: Terminal },
 		@IInstantiationService private readonly _instantiationService: IInstantiationService,
 		@IModelService private readonly _modelService: IModelService,
-		@IConfigurationService private readonly _configurationService: IConfigurationService
+		@IConfigurationService private readonly _configurationService: IConfigurationService,
+		@ILanguageFeaturesService private readonly _languageFeaturesService: ILanguageFeaturesService
 	) {
 		super();
 		const codeEditorWidgetOptions: ICodeEditorWidgetOptions = {
@@ -99,6 +103,12 @@ export class AccessibleBufferWidget extends DisposableStore {
 			}
 		}));
 		this.add(this._bufferEditor.onDidFocusEditorText(() => this._accessibleBuffer.classList.add('active')));
+		this._languageFeaturesService.documentSymbolProvider.register('terminal', {
+			provideDocumentSymbols: (model: ITextModel, token: CancellationToken): Promise<DocumentSymbol[] | undefined> => {
+				console.log(model);
+				return Promise.resolve([{ name: 'test', detail: 'none', kind: 0, tags: [], range: { startLineNumber: 1, endLineNumber: 1, startColumn: 0, endColumn: 5 }, selectionRange: { startLineNumber: 1, endLineNumber: 1, startColumn: 0, endColumn: 5 } }]);
+			}
+		});
 	}
 
 	private _hide(): void {
@@ -128,6 +138,7 @@ export class AccessibleBufferWidget extends DisposableStore {
 		if (!model) {
 			return;
 		}
+		model.setLanguage('terminal');
 		const lineNumber = model.getLineCount() - 1;
 		const selection = this._bufferEditor.getSelection();
 		// If the selection is at the top of the buffer, IE the default when not set, move it to the bottom
