@@ -29,6 +29,9 @@ import { INotificationService } from 'vs/platform/notification/common/notificati
 import { openContextMenu } from 'vs/workbench/contrib/terminal/browser/terminalContextMenu';
 import { ACTIVE_GROUP } from 'vs/workbench/services/editor/common/editorService';
 import { IWorkbenchLayoutService, Parts } from 'vs/workbench/services/layout/browser/layoutService';
+import { ILanguageFeaturesService } from 'vs/editor/common/services/languageFeatures';
+import { DocumentSymbol } from 'vs/editor/common/languages';
+import { ITextModel } from 'vs/editor/common/model';
 
 export class TerminalEditor extends EditorPane {
 
@@ -58,11 +61,19 @@ export class TerminalEditor extends EditorPane {
 		@IContextMenuService private readonly _contextMenuService: IContextMenuService,
 		@INotificationService private readonly _notificationService: INotificationService,
 		@ITerminalProfileService private readonly _terminalProfileService: ITerminalProfileService,
-		@IWorkbenchLayoutService private readonly _workbenchLayoutService: IWorkbenchLayoutService
+		@IWorkbenchLayoutService private readonly _workbenchLayoutService: IWorkbenchLayoutService,
+		@ILanguageFeaturesService private readonly _languageFeaturesService: ILanguageFeaturesService
 	) {
 		super(terminalEditorId, telemetryService, themeService, storageService);
 		this._dropdownMenu = this._register(menuService.createMenu(MenuId.TerminalNewDropdownContext, contextKeyService));
 		this._instanceMenu = this._register(menuService.createMenu(MenuId.TerminalEditorInstanceContext, contextKeyService));
+		this._languageFeaturesService.documentSymbolProvider.register('terminalEditor', {
+			provideDocumentSymbols: (model: ITextModel, token: CancellationToken): Promise<DocumentSymbol[] | undefined> => {
+				console.log(model);
+				return Promise.resolve([{ name: 'test', detail: 'none', kind: 0, tags: [], range: { startLineNumber: 1, endLineNumber: 1, startColumn: 0, endColumn: 5 }, selectionRange: { startLineNumber: 1, endLineNumber: 1, startColumn: 0, endColumn: 5 } }]);
+			}
+		});
+
 	}
 
 	override async setInput(newInput: TerminalEditorInput, options: IEditorOptions | undefined, context: IEditorOpenContext, token: CancellationToken) {

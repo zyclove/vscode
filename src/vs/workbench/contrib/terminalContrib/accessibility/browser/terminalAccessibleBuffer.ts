@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { KeyCode } from 'vs/base/common/keyCodes';
-import { DisposableStore } from 'vs/base/common/lifecycle';
 import { URI } from 'vs/base/common/uri';
 import { IEditorConstructionOptions } from 'vs/editor/browser/config/editorConfiguration';
 import { EditorExtensionsRegistry } from 'vs/editor/browser/editorExtensions';
@@ -24,6 +23,19 @@ import type { Terminal } from 'xterm';
 import { ILanguageFeaturesService } from 'vs/editor/common/services/languageFeatures';
 import { CancellationToken } from 'vs/base/common/cancellation';
 import { DocumentSymbol } from 'vs/editor/common/languages';
+import { CancellationTokenSource } from 'vs/editor/editor.api';
+import { OutlineModel } from 'vs/editor/contrib/documentSymbols/browser/outlineModel';
+import { EditorPane } from 'vs/workbench/browser/parts/editor/editorPane';
+import { Dimension, IDomPosition } from 'vs/base/browser/dom';
+import { IStorageService } from 'vs/platform/storage/common/storage';
+import { ITelemetryService } from 'vs/platform/telemetry/common/telemetry';
+import { IThemeService } from 'vs/platform/theme/common/themeService';
+import { IOutline, IOutlineCreator, IOutlineListConfig, IOutlineService, OutlineChangeEvent, OutlineTarget } from 'vs/workbench/services/outline/browser/outline';
+import { OutlineEntry } from 'vs/workbench/contrib/notebook/browser/contrib/outline/notebookOutline';
+import { IEditorPane } from 'vs/workbench/common/editor';
+import { IDisposable } from 'vs/base/common/lifecycle';
+import { IEditorOptions } from 'vs/platform/editor/common/editor';
+import { Event } from 'vs/workbench/workbench.web.main';
 
 const enum Constants {
 	Scheme = 'terminal-accessible-buffer',
@@ -31,7 +43,7 @@ const enum Constants {
 	Hide = 'hide'
 }
 
-export class AccessibleBufferWidget extends DisposableStore {
+export class AccessibleBufferWidget extends EditorPane {
 	public static ID: string = Constants.Scheme;
 	private _accessibleBuffer: HTMLElement;
 	private _bufferEditor: CodeEditorWidget;
@@ -45,9 +57,12 @@ export class AccessibleBufferWidget extends DisposableStore {
 		@IInstantiationService private readonly _instantiationService: IInstantiationService,
 		@IModelService private readonly _modelService: IModelService,
 		@IConfigurationService private readonly _configurationService: IConfigurationService,
-		@ILanguageFeaturesService private readonly _languageFeaturesService: ILanguageFeaturesService
+		@ILanguageFeaturesService private readonly _languageFeaturesService: ILanguageFeaturesService,
+		@ITelemetryService telemetryService: ITelemetryService,
+		@IThemeService themeService: IThemeService,
+		@IStorageService storageService: IStorageService
 	) {
-		super();
+		super('terminal-accessible-buffer', telemetryService, themeService, storageService);
 		const codeEditorWidgetOptions: ICodeEditorWidgetOptions = {
 			isSimpleWidget: true,
 			contributions: EditorExtensionsRegistry.getSomeEditorContributions([LinkDetector.ID, SelectionClipboardContributionID])
@@ -82,7 +97,7 @@ export class AccessibleBufferWidget extends DisposableStore {
 		this._accessibleBuffer.replaceChildren(this._editorContainer);
 		this._xtermElement.insertAdjacentElement('beforebegin', this._accessibleBuffer);
 		this._bufferEditor.layout({ width: this._xtermElement.clientWidth, height: this._xtermElement.clientHeight });
-		this.add(this._bufferEditor);
+		this._register(this._bufferEditor);
 		this._bufferEditor.onKeyDown((e) => {
 			// tab moves focus mode will prematurely move focus to the next element before
 			// xterm can be focused
@@ -92,23 +107,31 @@ export class AccessibleBufferWidget extends DisposableStore {
 				this._hide();
 			}
 		});
-		this.add(this._configurationService.onDidChangeConfiguration(e => {
+		this._register(this._configurationService.onDidChangeConfiguration(e => {
 			if (e.affectedKeys.has(TerminalSettingId.FontFamily)) {
 				this._font = _xterm.getFont();
 			}
 		}));
-		this.add(this._xterm.raw.onWriteParsed(async () => {
+		this._register(this._xterm.raw.onWriteParsed(async () => {
 			if (this._accessibleBuffer.classList.contains(Constants.Active)) {
 				await this._updateEditor(true);
 			}
 		}));
-		this.add(this._bufferEditor.onDidFocusEditorText(() => this._accessibleBuffer.classList.add('active')));
-		this._languageFeaturesService.documentSymbolProvider.register('terminal', {
+		this._register(this._bufferEditor.onDidFocusEditorText(() => this._accessibleBuffer.classList.add('active')));
+		this._languageFeaturesService.documentSymbolProvider.register('terminal-accessible-buffer', {
 			provideDocumentSymbols: (model: ITextModel, token: CancellationToken): Promise<DocumentSymbol[] | undefined> => {
 				console.log(model);
 				return Promise.resolve([{ name: 'test', detail: 'none', kind: 0, tags: [], range: { startLineNumber: 1, endLineNumber: 1, startColumn: 0, endColumn: 5 }, selectionRange: { startLineNumber: 1, endLineNumber: 1, startColumn: 0, endColumn: 5 } }]);
 			}
 		});
+	}
+
+	protected override createEditor(parent: HTMLElement): void {
+		// parent.appendChild(this._bufferEditor.getDomNode()!);
+		console.log(parent);
+	}
+	override layout(dimension: Dimension, position?: IDomPosition | undefined): void {
+		this._bufferEditor.layout({ width: this._xtermElement.clientWidth, height: this._xtermElement.clientHeight });
 	}
 
 	private _hide(): void {
@@ -120,6 +143,9 @@ export class AccessibleBufferWidget extends DisposableStore {
 	private async _updateModel(insertion?: boolean): Promise<void> {
 		let model = this._bufferEditor.getModel();
 		const lineCount = model?.getLineCount() ?? 0;
+		const token = new CancellationTokenSource().token;
+		const outlineModel = await OutlineModel.create(this._languageFeaturesService.documentSymbolProvider, model!, token);
+		console.log(outlineModel.asListOfDocumentSymbols());
 		if (insertion && model && lineCount > this._xterm.raw.rows) {
 			const lineNumber = lineCount + 1;
 			model.pushEditOperations(null, [{ range: { startLineNumber: lineNumber, endLineNumber: lineNumber, startColumn: 1, endColumn: 1 }, text: await this._getContent(lineNumber - 1) }], () => []);
@@ -138,7 +164,7 @@ export class AccessibleBufferWidget extends DisposableStore {
 		if (!model) {
 			return;
 		}
-		model.setLanguage('terminal');
+		model.setLanguage('terminal-accessible-buffer');
 		const lineNumber = model.getLineCount() - 1;
 		const selection = this._bufferEditor.getSelection();
 		// If the selection is at the top of the buffer, IE the default when not set, move it to the bottom
@@ -189,3 +215,76 @@ export class AccessibleBufferWidget extends DisposableStore {
 		return lines.join('\n');
 	}
 }
+
+class TerminalOutlineCreator implements IOutlineCreator<AccessibleBufferWidget, OutlineEntry> {
+
+	readonly dispose: () => void;
+
+	constructor(
+		@IOutlineService outlineService: IOutlineService,
+		@IInstantiationService private readonly _instantiationService: IInstantiationService,
+	) {
+		const reg = outlineService.registerOutlineCreator(this);
+		this.dispose = () => reg.dispose();
+	}
+
+	matches(candidate: IEditorPane): candidate is AccessibleBufferWidget {
+		return candidate.getId() === AccessibleBufferWidget.ID;
+	}
+
+	async createOutline(editor: AccessibleBufferWidget, target: OutlineTarget): Promise<IOutline<OutlineEntry> | undefined> {
+		return this._instantiationService.createInstance(AccessibleBufferOutline, editor, target);
+	}
+}
+
+export class AccessibleBufferOutline implements IOutline<OutlineEntry> {
+	uri: URI | undefined;
+	config: IOutlineListConfig<OutlineEntry>;
+	outlineKind: string;
+	isEmpty: boolean;
+	activeElement: OutlineEntry | undefined;
+	onDidChange: Event<OutlineChangeEvent>;
+	constructor(private readonly _editor: AccessibleBufferWidget,
+		private readonly _target: OutlineTarget,
+		@IInstantiationService instantiationService: IInstantiationService,
+		@IThemeService themeService: IThemeService,
+		@IEditorService private readonly _editorService: IEditorService,
+		@IMarkerService private readonly _markerService: IMarkerService,
+		@IConfigurationService private readonly _configurationService: IConfigurationService,
+		) {
+			this.config = {
+				breadcrumbsDataSource: {
+					getBreadcrumbElements: () => {
+						const result: OutlineEntry[] = [];
+						let candidate = this._activeEntry;
+						while (candidate) {
+							result.unshift(candidate);
+							candidate = candidate.parent;
+						}
+						return result;
+					}
+				},
+				quickPickDataSource: instantiationService.createInstance(NotebookQuickPickProvider, () => this._entries),
+				treeDataSource,
+				delegate,
+				renderers,
+				comparator,
+				options
+			};
+		}
+
+	reveal(entry: OutlineEntry, options: IEditorOptions, sideBySide: boolean): void | Promise<void> {
+		throw new Error('Method not implemented.');
+	}
+	preview(entry: OutlineEntry): IDisposable {
+		throw new Error('Method not implemented.');
+	}
+	captureViewState(): IDisposable {
+		throw new Error('Method not implemented.');
+	}
+	dispose(): void {
+		throw new Error('Method not implemented.');
+	}
+
+}
+
