@@ -74,6 +74,7 @@ import { IFeaturedExtensionsService } from 'vs/workbench/contrib/welcomeGettingS
 import { IFeaturedExtension } from 'vs/base/common/product';
 import { IExtensionManagementService } from 'vs/platform/extensionManagement/common/extensionManagement';
 import { ExtensionIdentifier } from 'vs/platform/extensions/common/extensions';
+import { Event } from 'vs/base/common/event';
 
 const SLIDE_TRANSITION_TIME_MS = 250;
 const configurationKey = 'workbench.startupEditor';
@@ -1434,8 +1435,7 @@ export class GettingStartedPage extends EditorPane {
 		};
 
 		buildStepList();
-
-		this.detailsPageDisposables.add(this.contextService.onDidChangeContext(e => {
+		this.detailsPageDisposables.add(Event.debounce(this.contextService.onDidChangeContext, (last, event) => event, 100, true)(e => {
 			if (e.affectsSome(contextKeysToWatch)) {
 				buildStepList();
 				this.registerDispatchListeners();
