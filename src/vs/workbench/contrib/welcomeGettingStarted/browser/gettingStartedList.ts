@@ -74,7 +74,9 @@ export class GettingStartedIndexList<T extends { id: string; when?: ContextKeyEx
 	}
 
 	onDidChange(listener: () => void) {
-		this._register(this.onDidChangeEntries(listener));
+		this._register(Event.debounce(this.onDidChangeEntries, (_, event) => event, 200, true)(_ => {
+			listener();
+		}));
 	}
 
 	register(d: IDisposable) { if (this.isDisposed) { d.dispose(); } else { this._register(d); } }

@@ -243,7 +243,9 @@ export class GettingStartedPage extends EditorPane {
 			}
 		}));
 
-		this._register(this.gettingStartedService.onDidAddWalkthrough(rerender));
+		this._register(Event.debounce(this.gettingStartedService.onDidAddWalkthrough, (_, event) => event, 200, true)(_ => {
+			rerender();
+		}));
 		this._register(this.gettingStartedService.onDidRemoveWalkthrough(rerender));
 
 		this._register(this.gettingStartedService.onDidChangeWalkthrough(category => {
@@ -1435,7 +1437,7 @@ export class GettingStartedPage extends EditorPane {
 		};
 
 		buildStepList();
-		this.detailsPageDisposables.add(Event.debounce(this.contextService.onDidChangeContext, (last, event) => event, 100, true)(e => {
+		this.detailsPageDisposables.add(Event.debounce(this.contextService.onDidChangeContext, (_, event) => event, 200, true)(e => {
 			if (e.affectsSome(contextKeysToWatch)) {
 				buildStepList();
 				this.registerDispatchListeners();
