@@ -176,14 +176,14 @@ export class AccessibleBufferWidget extends DisposableStore {
 		}
 		const quickPickItems: IQuickPickItem[] = [];
 		for (const command of commands) {
-			const line = command.marker?.line;
+			const line = command.executedMarker?.line;
 			if (!line || !command.command.length) {
 				continue;
 			}
 			quickPickItems.push(
 				{
 					label: localize('terminal.integrated.symbolQuickPick.labelNoExitCode', '{0}', command.command),
-					meta: JSON.stringify({ line: line + 1, exitCode: command.exitCode })
+					meta: JSON.stringify({ line, exitCode: command.exitCode })
 				});
 		}
 		const quickPick = this._quickInputService.createQuickPick<IQuickPickItem>();
