@@ -36,6 +36,7 @@ export class MergedEnvironmentVariableCollection implements IMergedEnvironmentVa
 				const mutator = next.value[1];
 				entry.unshift({
 					extensionIdentifier,
+					reapplyAfterInit: mutator.reapplyAfterInit,
 					value: mutator.value,
 					type: mutator.type
 				});

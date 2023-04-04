@@ -37,7 +37,7 @@ export interface IEnvironmentVariableService {
 	/**
 	 * Sets an extension's environment variable collection.
 	 */
-	set(extensionIdentifier: string, collection: IEnvironmentVariableCollection): void;
+	set(extensionIdentifier: string, collection: IEnvironmentVariableCollectionWithPersistence): void;
 
 	/**
 	 * Deletes an extension's environment variable collection.
@@ -47,6 +47,7 @@ export interface IEnvironmentVariableService {
 
 export interface IEnvironmentVariableCollectionWithPersistence extends IEnvironmentVariableCollection {
 	readonly persistent: boolean;
+	readonly reapplyAfterInit: boolean;
 }
 
 export interface IEnvironmentVariableInfo {

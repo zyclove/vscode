@@ -400,10 +400,11 @@ export class MainThreadTerminalService implements MainThreadTerminalServiceShape
 		return terminal;
 	}
 
-	$setEnvironmentVariableCollection(extensionIdentifier: string, persistent: boolean, collection: ISerializableEnvironmentVariableCollection | undefined): void {
+	$setEnvironmentVariableCollection(extensionIdentifier: string, persistent: boolean, reapplyAfterInit: boolean, collection: ISerializableEnvironmentVariableCollection | undefined): void {
 		if (collection) {
 			const translatedCollection = {
 				persistent,
+				reapplyAfterInit,
 				map: deserializeEnvironmentVariableCollection(collection)
 			};
 			this._environmentVariableService.set(extensionIdentifier, translatedCollection);

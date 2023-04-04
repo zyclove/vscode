@@ -15,6 +15,7 @@ import { IMergedEnvironmentVariableCollection, ISerializableEnvironmentVariableC
 
 interface ISerializableExtensionEnvironmentVariableCollection {
 	extensionIdentifier: string;
+	reapplyAfterInit: boolean;
 	collection: ISerializableEnvironmentVariableCollection;
 }
 
@@ -39,6 +40,7 @@ export class EnvironmentVariableService implements IEnvironmentVariableService {
 			const collectionsJson: ISerializableExtensionEnvironmentVariableCollection[] = JSON.parse(serializedPersistedCollections);
 			collectionsJson.forEach(c => this.collections.set(c.extensionIdentifier, {
 				persistent: true,
+				reapplyAfterInit: c.reapplyAfterInit ?? false, // Handle undefined for legacy saved data
 				map: deserializeEnvironmentVariableCollection(c.collection)
 			}));
 
@@ -80,6 +82,7 @@ export class EnvironmentVariableService implements IEnvironmentVariableService {
 			if (collection.persistent) {
 				collectionsJson.push({
 					extensionIdentifier,
+					reapplyAfterInit: collection.reapplyAfterInit,
 					collection: serializeEnvironmentVariableCollection(this.collections.get(extensionIdentifier)!.map)
 				});
 			}

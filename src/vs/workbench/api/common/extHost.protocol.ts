@@ -495,7 +495,7 @@ export interface MainThreadTerminalServiceShape extends IDisposable {
 	$unregisterProfileProvider(id: string): void;
 	$registerQuickFixProvider(id: string, extensionIdentifier: string): void;
 	$unregisterQuickFixProvider(id: string): void;
-	$setEnvironmentVariableCollection(extensionIdentifier: string, persistent: boolean, collection: ISerializableEnvironmentVariableCollection | undefined): void;
+	$setEnvironmentVariableCollection(extensionIdentifier: string, persistent: boolean, reapplyAfterInit: boolean, collection: ISerializableEnvironmentVariableCollection | undefined): void;
 
 	// Process
 	$sendProcessData(terminalId: number, data: string): void;

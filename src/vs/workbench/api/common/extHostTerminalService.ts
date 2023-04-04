@@ -834,7 +834,7 @@ export abstract class BaseExtHostTerminalService extends Disposable implements I
 
 	private _syncEnvironmentVariableCollection(extensionIdentifier: string, collection: EnvironmentVariableCollection): void {
 		const serialized = serializeEnvironmentVariableCollection(collection.map);
-		this._proxy.$setEnvironmentVariableCollection(extensionIdentifier, collection.persistent, serialized.length === 0 ? undefined : serialized);
+		this._proxy.$setEnvironmentVariableCollection(extensionIdentifier, collection.persistent, collection.reapplyAfterInit, serialized.length === 0 ? undefined : serialized);
 	}
 
 	public $initEnvironmentVariableCollections(collections: [string, ISerializableEnvironmentVariableCollection][]): void {
@@ -873,6 +873,14 @@ class EnvironmentVariableCollection implements vscode.EnvironmentVariableCollect
 	public get persistent(): boolean { return this._persistent; }
 	public set persistent(value: boolean) {
 		this._persistent = value;
+		this._onDidChangeCollection.fire();
+	}
+
+	private _reapplyAfterInit: boolean = false;
+
+	public get reapplyAfterInit(): boolean { return this._reapplyAfterInit; }
+	public set reapplyAfterInit(value: boolean) {
+		this._reapplyAfterInit = value;
 		this._onDidChangeCollection.fire();
 	}
 

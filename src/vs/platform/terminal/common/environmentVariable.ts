@@ -13,6 +13,7 @@ export enum EnvironmentVariableMutatorType {
 export interface IEnvironmentVariableMutator {
 	readonly value: string;
 	readonly type: EnvironmentVariableMutatorType;
+	readonly reapplyAfterInit: boolean;
 }
 
 export interface IEnvironmentVariableCollection {
