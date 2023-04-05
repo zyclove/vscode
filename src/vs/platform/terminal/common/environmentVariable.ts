@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { IProcessEnvironment } from 'vs/base/common/platform';
+import { IWorkspaceFolderData } from 'vs/platform/workspace/common/workspace';
 
 export enum EnvironmentVariableMutatorType {
 	Replace = 1,
@@ -13,7 +14,12 @@ export enum EnvironmentVariableMutatorType {
 export interface IEnvironmentVariableMutator {
 	readonly value: string;
 	readonly type: EnvironmentVariableMutatorType;
+	readonly scope: EnvironmentVariableScope | undefined;
 }
+
+export type EnvironmentVariableScope = {
+	workspaceFolder?: IWorkspaceFolderData;
+};
 
 export interface IEnvironmentVariableCollection {
 	readonly map: ReadonlyMap<string, IEnvironmentVariableMutator>;
