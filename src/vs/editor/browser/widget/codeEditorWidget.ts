@@ -1858,6 +1858,10 @@ export class CodeEditorWidget extends Disposable implements editorBrowser.ICodeE
 	private removeDropIndicator(): void {
 		this._dropIntoEditorDecorations.clear();
 	}
+
+	public continueProcessingDeliveryQueue(): void {
+		this._deliveryQueue.deliver();
+	}
 }
 
 const enum BooleanEventValue {

@@ -612,20 +612,21 @@ export enum InlineCompletionTriggerKind {
 	Explicit = 1,
 }
 
-export interface InlineCompletionContext {
-	/**
-	 * How the completion was triggered.
-	 */
-	readonly triggerKind: InlineCompletionTriggerKind;
-
-	readonly selectedSuggestionInfo: SelectedSuggestionInfo | undefined;
+export class InlineCompletionContext {
+	constructor(
+		/**
+		 * How the completion was triggered.
+		 */
+		readonly triggerKind: InlineCompletionTriggerKind,
+		readonly selectedSuggestionInfo: SelectedSuggestionInfo | undefined,
+	) { }
 }
 
 export interface SelectedSuggestionInfo {
-	range: IRange;
-	text: string;
-	isSnippetText: boolean;
-	completionKind: CompletionItemKind;
+	readonly range: IRange;
+	readonly text: string;
+	readonly isSnippetText: boolean;
+	readonly completionKind: CompletionItemKind;
 }
 
 export interface InlineCompletion {

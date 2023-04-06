@@ -9,13 +9,14 @@ import { Disposable } from 'vs/base/common/lifecycle';
 import { IActiveCodeEditor } from 'vs/editor/browser/editorBrowser';
 import { Position } from 'vs/editor/common/core/position';
 import { Range } from 'vs/editor/common/core/range';
-import { CompletionItemInsertTextRule, CompletionItemKind } from 'vs/editor/common/languages';
+import { Command, CompletionItemInsertTextRule, CompletionItemKind } from 'vs/editor/common/languages';
 import { SnippetParser } from 'vs/editor/contrib/snippet/browser/snippetParser';
 import { SnippetSession } from 'vs/editor/contrib/snippet/browser/snippetSession';
 import { CompletionItem } from 'vs/editor/contrib/suggest/browser/suggest';
 import { SuggestController } from 'vs/editor/contrib/suggest/browser/suggestController';
-import { minimizeInlineCompletion, NormalizedInlineCompletion, normalizedInlineCompletionsEquals } from './inlineCompletionToGhostText';
 import { IObservable, observableValue, transaction } from 'vs/base/common/observable';
+import { ISingleEditOperation } from 'vs/editor/common/core/editOperation';
+
 
 export interface SuggestWidgetState {
 	/**
@@ -25,9 +26,22 @@ export interface SuggestWidgetState {
 }
 
 export interface SuggestItemInfo {
-	normalizedInlineCompletion: NormalizedInlineCompletion;
 	isSnippetText: boolean;
 	completionItemKind: CompletionItemKind;
+
+	readonly filterText: string;
+	readonly command?: Command;
+	readonly range: Range;
+	readonly insertText: string;
+	readonly snippetInfo:
+	| {
+		snippet: string;
+		/* Could be different than the main range */
+		range: Range;
+	}
+	| undefined;
+
+	readonly additionalTextEdits: readonly ISingleEditOperation[];
 }
 
 export class SuggestWidgetInlineCompletionProvider extends Disposable {
@@ -203,14 +217,13 @@ function suggestionToSuggestItemInfo(suggestController: SuggestController, posit
 		return {
 			completionItemKind: item.completion.kind,
 			isSnippetText: false,
-			normalizedInlineCompletion: {
-				// Dummy element, so that space is reserved, but no text is shown
-				range: Range.fromPositions(position, position),
-				insertText: '',
-				filterText: '',
-				snippetInfo: undefined,
-				additionalTextEdits: [],
-			},
+
+			// Dummy element, so that space is reserved, but no text is shown
+			range: Range.fromPositions(position, position),
+			insertText: '',
+			filterText: '',
+			snippetInfo: undefined,
+			additionalTextEdits: [],
 		};
 	}
 
@@ -235,15 +248,14 @@ function suggestionToSuggestItemInfo(suggestController: SuggestController, posit
 	return {
 		isSnippetText,
 		completionItemKind: item.completion.kind,
-		normalizedInlineCompletion: {
-			insertText: insertText,
-			filterText: insertText,
-			range: Range.fromPositions(
-				position.delta(0, -info.overwriteBefore),
-				position.delta(0, Math.max(info.overwriteAfter, 0))
-			),
-			snippetInfo: undefined,
-			additionalTextEdits: [],
-		}
+
+		insertText: insertText,
+		filterText: insertText,
+		range: Range.fromPositions(
+			position.delta(0, -info.overwriteBefore),
+			position.delta(0, Math.max(info.overwriteAfter, 0))
+		),
+		snippetInfo: undefined,
+		additionalTextEdits: [],
 	};
 }
